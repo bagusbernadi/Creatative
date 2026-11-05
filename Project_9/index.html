@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 9: Sales & Customer Dashboard</title><meta name="description" content="Analisis penjualan dan pelanggan toko online UK (UCI Online Retail II): musim puncak, segmentasi, retensi. SQL, pandas.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 9: Sales & Customer Dashboard"><meta property="og:description" content="Penjualan memuncak September–November; pelanggan teratas 10% menyumbang 63,7% revenue; retensi VIP +5 poin bernilai sekitar £220.880 per tahun (perkiraan).">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 9: kapan dan siapa yang menghasilkan revenue?</h1><p><b>Tujuan project:</b> memahami musim puncak penjualan, konsentrasi revenue pelanggan dan produk, serta peluang retensi pada toko online UK. Analisis SQL + Python.</p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Retail · e-commerce</span><span class="tag">Dataset publik UCI (CC BY 4.0)</span><span class="tag">SQL · Python</span></div></header>
+
+<div class="note"><b>Data publik toko online UK (2009–2011).</b> Pola ≠ sebab-akibat; angka dampak berlabel perkiraan. Pelanggan tanpa ID tidak ikut analisis pelanggan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Kapan penjualan memuncak, siapa pelanggan yang menyumbang revenue, dan di mana peluang menaikkan pembelian ulang?</dd>
+<dt>Data</dt><dd>1.027.017 baris transaksi, 2 tahun (Des 2009 – Des 2011), 40.077 pesanan, 5.878 pelanggan; net revenue £19,0 juta.</dd>
+<dt>Temuan utama</dt><dd>Penjualan memuncak September–November (rata-rata £1.148.588 per bulan vs £774.229 rata-rata tahunan). Pelanggan teratas 10% menyumbang 63,7% revenue.</dd>
+<dt>Keputusan yang didukung</dt><dd>Siapkan stok sebelum September dan jaga pelanggan VIP; menaikkan pembelian ulang VIP 5 poin bernilai sekitar £220.880 per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, pandas crosscheck, segmentasi pelanggan, analisis Pareto, skenario retensi.</dd>
+<dt>Catatan jujur</dt><dd>Revenue produk tidak terlalu terkonsentrasi: butuh 1.048 dari 4.858 produk (21,6%) untuk mencapai 80% revenue. Hubungan pembelian ulang dengan pelanggan tetap sebagian mekanis.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Angka dari data UCI Online Retail II</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Musim</span><h3>November adalah puncak dua tahun berturut</h3><p>Rata-rata Sep–Nov £1.148.588 per bulan, November tertinggi; Desember 2011 parsial (sampai 9 Des).</p></div>
+<div class="card"><span class="q">Temuan 2 · Pelanggan</span><h3>VIP: 426 pelanggan, 54% revenue</h3><p>Pelanggan teratas 10% = 63,7% revenue; median jeda belanja VIP 11 hari vs 78 hari (Light).</p></div>
+<div class="card"><span class="q">Temuan 3 · Negara</span><h3>Inggris 85% revenue</h3><p>Nilai per pesanan pelanggan luar Inggris £810 vs £442 di Inggris, tetapi frekuensi pesanan hampir sama.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Revenue memuncak tiap September–November</h3><svg viewBox="0 0 640 300" role="img" aria-label="Net revenue bulanan" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="620" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">400</text><line x1="48" x2="620" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">800</text><line x1="48" x2="620" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">1.200</text><line x1="48" x2="620" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">1.600</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Des09</text><text x="119.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mar10</text><text x="191.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jun10</text><text x="262.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Sep10</text><text x="334.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Des10</text><text x="405.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mar11</text><text x="477.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jun11</text><text x="548.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Sep11</text><text x="620.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Des11</text><polyline points="48.0,140.5 71.8,168.0 95.7,182.3 119.5,145.8 143.3,165.0 167.2,169.4 191.0,159.4 214.8,168.8 238.7,162.9 262.5,132.0 286.3,95.8 310.2,42.9 334.0,148.4 357.8,178.0 381.7,187.7 405.5,158.6 429.3,188.5 453.2,152.3 477.0,157.3 500.8,158.9 524.7,155.2 548.5,105.7 572.3,97.6 596.2,36.7 620.0,197.8" fill="none" stroke="#1A73E8" stroke-width="2.4"/></svg><p class="foot">Net revenue bulanan (£ ribu). Desember 2011 hanya sampai 9 Desember (parsial).</p></div>
+<div class="card fig"><h3>VIP hanya 426 pelanggan tetapi 54% revenue</h3><div class="row"><span class="n" style="width:150px">VIP (426)</span><span class="t"><span class="b" style="width:90.0%;background:#E37400"></span></span><span class="v">54%</span></div><div class="row"><span class="n" style="width:150px">Loyal (851)</span><span class="t"><span class="b" style="width:33.3%;background:#1A73E8"></span></span><span class="v">20%</span></div><div class="row"><span class="n" style="width:150px">Regular (1.276)</span><span class="t"><span class="b" style="width:20.0%;background:#1A73E8"></span></span><span class="v">12%</span></div><div class="row"><span class="n" style="width:150px">Light (1.701)</span><span class="t"><span class="b" style="width:11.7%;background:#1A73E8"></span></span><span class="v">7%</span></div><div class="row"><span class="n" style="width:150px">Tidak aktif 12 bulan (1.685)</span><span class="t"><span class="b" style="width:11.7%;background:#1A73E8"></span></span><span class="v">7%</span></div><p class="foot">Porsi revenue menurut segmen (jumlah pelanggan).</p></div>
+<div class="card fig"><h3>Inggris mendominasi revenue; negara lain kecil</h3><div class="row"><span class="n" style="width:150px">United Kingdom</span><span class="t"><span class="b" style="width:84.9%;background:#E37400"></span></span><span class="v">84,9%</span></div><div class="row"><span class="n" style="width:150px">EIRE</span><span class="t"><span class="b" style="width:3.2%;background:#1A73E8"></span></span><span class="v">3,2%</span></div><div class="row"><span class="n" style="width:150px">Netherlands</span><span class="t"><span class="b" style="width:2.9%;background:#1A73E8"></span></span><span class="v">2,9%</span></div><div class="row"><span class="n" style="width:150px">Germany</span><span class="t"><span class="b" style="width:2.2%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">France</span><span class="t"><span class="b" style="width:1.7%;background:#1A73E8"></span></span><span class="v">1,7%</span></div><div class="row"><span class="n" style="width:150px">Australia</span><span class="t"><span class="b" style="width:0.9%;background:#1A73E8"></span></span><span class="v">0,9%</span></div><p class="foot">Porsi net revenue enam negara teratas.</p></div>
+<div class="card fig"><h3>VIP berbelanja ulang jauh lebih cepat</h3><div class="row"><span class="n" style="width:150px">VIP</span><span class="t"><span class="b" style="width:12.2%;background:#1A73E8"></span></span><span class="v">11 hari</span></div><div class="row"><span class="n" style="width:150px">Loyal</span><span class="t"><span class="b" style="width:38.9%;background:#1A73E8"></span></span><span class="v">35 hari</span></div><div class="row"><span class="n" style="width:150px">Regular</span><span class="t"><span class="b" style="width:56.7%;background:#1A73E8"></span></span><span class="v">51 hari</span></div><div class="row"><span class="n" style="width:150px">Light</span><span class="t"><span class="b" style="width:86.7%;background:#1A73E8"></span></span><span class="v">78 hari</span></div><div class="row"><span class="n" style="width:150px">Tidak aktif 12 bulan</span><span class="t"><span class="b" style="width:31.1%;background:#1A73E8"></span></span><span class="v">28 hari</span></div><p class="foot">Median jeda hari antar pesanan menurut segmen.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Siapkan stok dan promosi</b> sebelum September; November adalah puncak.</li>
+<li><b>Prioritaskan retensi VIP dan Loyal</b>; keduanya menyumbang 74% revenue.</li>
+<li><b>Jangan memangkas katalog berdasarkan Pareto</b>; revenue produk tersebar (1.048 produk untuk 80%).</li></ul></div>
+<div class="scroll"><table><tr><th>Segmen</th><th>Kenaikan pembelian ulang 5 poin</th></tr>
+<tr class=sel><td>VIP</td><td>sekitar £220.880 per tahun <span class="est">perkiraan</span></td></tr><tr><td>Loyal</td><td>sekitar £82.921 per tahun <span class="est">perkiraan</span></td></tr><tr><td>Regular</td><td>sekitar £51.257 per tahun <span class="est">perkiraan</span></td></tr><tr><td>Light</td><td>sekitar £35.250 per tahun <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: pelanggan yang kembali menghasilkan revenue per pelanggan seperti rata-rata segmennya; belum teruji sebagai hasil kampanye.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 6 dari 6 pemeriksaan lulus (4.963 nilai).</li>
+<li>Cek silang LibreOffice (hasil tersimpan, tidak dijalankan ulang di sini): 68 dari 68 nilai sama.</li>
+<li>Pembersihan mengubah revenue mentah £19,3 juta menjadi net £19,0 juta.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Satu toko online UK; hasil tidak berlaku umum.</li>
+<li>Analisis pelanggan hanya memakai 5.939 pelanggan ber-ID; revenue mereka £16,3 juta dari net £19,0 juta.</li>
+<li>Pembelian ulang dan status pelanggan tetap berhubungan sebagian secara mekanis.</li>
+<li>Dampak retensi adalah skenario perkiraan, bukan hasil uji.</li>
+<li>Dataset berlisensi CC BY 4.0, wajib atribusi. Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Dataset resmi: <a href="https://archive.ics.uci.edu/dataset/502/online+retail+ii" target="_blank" rel="noopener">UCI Online Retail II</a></li>
+<li>Folder dataset di GitHub (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/online-retail-ii" target="_blank" rel="noopener">online-retail-ii</a></li>
+<li>Repository: <a href="https://github.com/bagusbernadi/Project-9-Sales-Customer-Dashboard" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-9-One-Pager.pdf">Project-9-One-Pager.pdf</a></li></ul>
+<p class="foot">Sitasi: Chen, D. (2012). Online Retail II. UCI ML Repository. doi:10.24432/C5CG6D.</p></div>
+
+</main></body></html>

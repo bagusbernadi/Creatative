@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 8: Property Price Analysis Jabodetabek</title><meta name="description" content="Analisis harga per m² 3.458 listing rumah Jabodetabek: area termahal, faktor harga, dan listing anomali. SQL, pandas.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 8: Property Price Analysis Jabodetabek"><meta property="og:description" content="Median harga per m² tertinggi di Jakarta Utara (Rp26,2 juta) vs Bekasi (Rp11,4 juta); lokasi paling menentukan.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 8: area mana termahal per m²?</h1><p><b>Tujuan project:</b> menunjukkan harga per m² tiap area di Jabodetabek, faktor yang terkait dengan harga, dan listing yang jauh dari wajar, agar pembeli punya pembanding yang adil.</p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Properti</span><span class="tag">Dataset publik Kaggle (lisensi Unknown)</span><span class="tag">SQL · Python</span></div></header>
+
+<div class="note"><b>Harga listing, bukan harga transaksi.</b> Data publik iklan rumah di Jabodetabek. Pola ≠ sebab-akibat; angka rupiah berlabel perkiraan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Area mana yang paling mahal per m², faktor apa yang paling terkait dengan harga, dan listing mana yang jauh di atas atau di bawah wajar?</dd>
+<dt>Data</dt><dd>3.458 listing unik rumah Jabodetabek (3.439 dengan harga per m² valid), 9 kota, 88 kecamatan.</dd>
+<dt>Temuan utama</dt><dd>Median harga per m² tertinggi di Jakarta Utara (Rp26,2 juta) dan terendah di Bekasi (Rp11,4 juta). Lokasi (kota) menjelaskan lebih banyak variasi harga daripada jumlah kamar.</dd>
+<dt>Keputusan yang didukung</dt><dd>Bandingkan listing dengan median kecamatan, bukan median seluruh Jabodetabek; periksa manual listing dengan rasio di bawah 0,5 sebelum menganggapnya murah.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, pandas crosscheck, korelasi Spearman, eta-squared, perbandingan listing terhadap median kecamatan.</dd>
+<dt>Catatan jujur</dt><dd>Hipotesis luas bangunan vs harga per m² tidak sesuai dugaan (korelasi positif 0,29); Jakarta Pusat hanya 31 listing.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Angka dari data listing</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Lokasi</span><h3>Kota menentukan harga per m²</h3><p>Eta-squared kota 0,25, jauh di atas sertifikat (0,03) dan kondisi (0,01).</p></div>
+<div class="card"><span class="q">Temuan 2 · Ukuran</span><h3>Rumah lebih besar justru lebih mahal per m²</h3><p>Spearman luas bangunan vs harga per m² 0,29; berlawanan dengan dugaan diskon untuk luas besar.</p></div>
+<div class="card"><span class="q">Temuan 3 · Anomali</span><h3>6,9% listing berharga ekstrem</h3><p>Rasio ke median kecamatan ekstrem (di bawah 0,5 atau di atas 2); tidak semuanya salah input.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Jakarta Utara dan Selatan paling mahal per m²; Bekasi termurah</h3><div class="row"><span class="n" style="width:150px">Jakarta Utara (123)</span><span class="t"><span class="b" style="width:87.5%;background:#E37400"></span></span><span class="v">26,2</span></div><div class="row"><span class="n" style="width:150px">Jakarta Selatan (226)</span><span class="t"><span class="b" style="width:74.4%;background:#E37400"></span></span><span class="v">22,3</span></div><div class="row"><span class="n" style="width:150px">Jakarta Barat (192)</span><span class="t"><span class="b" style="width:57.8%;background:#1A73E8"></span></span><span class="v">17,3</span></div><div class="row"><span class="n" style="width:150px">Tangerang (836)</span><span class="t"><span class="b" style="width:57.1%;background:#1A73E8"></span></span><span class="v">17,1</span></div><div class="row"><span class="n" style="width:150px">Jakarta Pusat (31)</span><span class="t"><span class="b" style="width:54.9%;background:#1A73E8"></span></span><span class="v">16,5</span></div><div class="row"><span class="n" style="width:150px">Jakarta Timur (82)</span><span class="t"><span class="b" style="width:52.6%;background:#1A73E8"></span></span><span class="v">15,8</span></div><div class="row"><span class="n" style="width:150px">Bogor (854)</span><span class="t"><span class="b" style="width:43.9%;background:#1A73E8"></span></span><span class="v">13,2</span></div><div class="row"><span class="n" style="width:150px">Depok (515)</span><span class="t"><span class="b" style="width:41.6%;background:#1A73E8"></span></span><span class="v">12,5</span></div><div class="row"><span class="n" style="width:150px">Bekasi (580)</span><span class="t"><span class="b" style="width:38.0%;background:#1A73E8"></span></span><span class="v">11,4</span></div><p class="foot">Median Rp juta/m² (jumlah listing valid). Jakarta Pusat hanya sedikit listing.</p></div>
+<div class="card fig"><h3>Kebayoran Baru dan Cipete memimpin di tingkat kecamatan</h3><div class="row"><span class="n" style="width:150px">Kebayoran Baru (11)</span><span class="t"><span class="b" style="width:88.3%;background:#E37400"></span></span><span class="v">48,6</span></div><div class="row"><span class="n" style="width:150px">Cipete (13)</span><span class="t"><span class="b" style="width:67.3%;background:#E37400"></span></span><span class="v">37,0</span></div><div class="row"><span class="n" style="width:150px">Kemang (35)</span><span class="t"><span class="b" style="width:61.4%;background:#E37400"></span></span><span class="v">33,8</span></div><div class="row"><span class="n" style="width:150px">Pondok Indah (10)</span><span class="t"><span class="b" style="width:57.6%;background:#E37400"></span></span><span class="v">31,7</span></div><div class="row"><span class="n" style="width:150px">Pantai Indah Kapuk (89)</span><span class="t"><span class="b" style="width:52.7%;background:#E37400"></span></span><span class="v">29,0</span></div><div class="row"><span class="n" style="width:150px">Alam Sutera (115)</span><span class="t"><span class="b" style="width:48.4%;background:#E37400"></span></span><span class="v">26,6</span></div><div class="row"><span class="n" style="width:150px">BSD De Park (11)</span><span class="t"><span class="b" style="width:45.5%;background:#E37400"></span></span><span class="v">25,0</span></div><div class="row"><span class="n" style="width:150px">Cilandak (17)</span><span class="t"><span class="b" style="width:44.4%;background:#E37400"></span></span><span class="v">24,4</span></div><p class="foot">Median Rp juta/m²; kecamatan dengan minimal 10 listing.</p></div>
+<div class="card fig"><h3>Luas tanah paling terkait dengan harga per m²</h3><div class="row"><span class="n" style="width:150px">Luas tanah</span><span class="t"><span class="b" style="width:77.6%;background:#1A73E8"></span></span><span class="v">0,39</span></div><div class="row"><span class="n" style="width:150px">Kamar mandi</span><span class="t"><span class="b" style="width:71.0%;background:#1A73E8"></span></span><span class="v">0,35</span></div><div class="row"><span class="n" style="width:150px">Luas bangunan</span><span class="t"><span class="b" style="width:58.8%;background:#1A73E8"></span></span><span class="v">0,29</span></div><div class="row"><span class="n" style="width:150px">Lantai</span><span class="t"><span class="b" style="width:50.4%;background:#1A73E8"></span></span><span class="v">0,25</span></div><div class="row"><span class="n" style="width:150px">Kamar tidur</span><span class="t"><span class="b" style="width:49.2%;background:#1A73E8"></span></span><span class="v">0,25</span></div><div class="row"><span class="n" style="width:150px">Carport</span><span class="t"><span class="b" style="width:40.8%;background:#1A73E8"></span></span><span class="v">0,20</span></div><div class="row"><span class="n" style="width:150px">Usia bangunan</span><span class="t"><span class="b" style="width:33.2%;background:#1A73E8"></span></span><span class="v">0,17</span></div><div class="row"><span class="n" style="width:150px">Garasi</span><span class="t"><span class="b" style="width:23.0%;background:#1A73E8"></span></span><span class="v">0,12</span></div><p class="foot">Korelasi Spearman dengan harga per m²; keterkaitan bukan sebab-akibat.</p></div>
+<div class="card fig"><h3>Rumah lebih besar lebih mahal per m², terutama di atas 400 m²</h3><svg viewBox="0 0 640 240" role="img" aria-label="Median Rp juta/m² menurut luas bangunan" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="206.0" y2="206.0" stroke="#DADCE0"/><text x="42" y="210.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="620" y1="168.0" y2="168.0" stroke="#DADCE0"/><text x="42" y="172.0" text-anchor="end" font-size="12" fill="#5F6368">5</text><line x1="48" x2="620" y1="130.0" y2="130.0" stroke="#DADCE0"/><text x="42" y="134.0" text-anchor="end" font-size="12" fill="#5F6368">10</text><line x1="48" x2="620" y1="92.0" y2="92.0" stroke="#DADCE0"/><text x="42" y="96.0" text-anchor="end" font-size="12" fill="#5F6368">15</text><line x1="48" x2="620" y1="54.0" y2="54.0" stroke="#DADCE0"/><text x="42" y="58.0" text-anchor="end" font-size="12" fill="#5F6368">20</text><line x1="48" x2="620" y1="16.0" y2="16.0" stroke="#DADCE0"/><text x="42" y="20.0" text-anchor="end" font-size="12" fill="#5F6368">25</text><rect x="66.3" y="109.6" width="77.8" height="96.4" rx="3" fill="#1A73E8"/><text x="105.2" y="104.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">12,7</text><text x="105.2" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 105.2 220)"><50</text><rect x="180.7" y="105.2" width="77.8" height="100.8" rx="3" fill="#1A73E8"/><text x="219.6" y="100.2" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">13,3</text><text x="219.6" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 219.6 220)">50-99</text><rect x="295.1" y="96.0" width="77.8" height="110.0" rx="3" fill="#1A73E8"/><text x="334.0" y="91.0" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">14,5</text><text x="334.0" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 334.0 220)">100-199</text><rect x="409.5" y="84.4" width="77.8" height="121.6" rx="3" fill="#1A73E8"/><text x="448.4" y="79.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">16,0</text><text x="448.4" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 448.4 220)">200-399</text><rect x="523.9" y="37.9" width="77.8" height="168.1" rx="3" fill="#1A73E8"/><text x="562.8" y="32.9" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">22,1</text><text x="562.8" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 562.8 220)">>=400</text></svg><p class="foot">Median Rp juta per m² menurut kelompok luas bangunan.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Bandingkan dengan median kecamatan</b> yang sama sebelum menilai listing.</li>
+<li><b>Verifikasi manual</b> listing dengan rasio di bawah 0,5 dan di atas 2.</li>
+<li><b>Untuk anggaran tanah</b>, kecamatan penyangga (mis. Jonggol) memberi luas tanah terbesar per Rp1 miliar (248 m² menurut median).</li></ul></div>
+<div class="scroll"><table><tr><th>Kelompok listing</th><th>Jumlah</th><th>Median selisih terhadap median kecamatan</th></tr>
+<tr><td>Rasio di bawah 0,5</td><td>120</td><td>sekitar Rp1,4 miliar di bawah <span class="est">perkiraan</span></td></tr>
+<tr><td>Rasio di atas 2</td><td>59</td><td>sekitar Rp2,2 miliar di atas <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Selisih dihitung dari median harga per m² kecamatan × luas bangunan listing; bukan nilai wajar atau harga transaksi.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: kota 9 dari 9, kecamatan 88 dari 88 sama.</li>
+<li>Cek silang spreadsheet (tersimpan dari proses sebelumnya, tidak dijalankan ulang di sini): kota 9 dari 9, kecamatan 88 dari 88.</li>
+<li>Sensitivitas batas harga per m²: jumlah listing valid 3.402–3.452 menurut tiga pasang batas.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Harga listing, bukan harga transaksi; waktu pengambilan data satu snapshot.</li>
+<li>5 listing berkoordinat jauh dari kotanya (kemungkinan salah input).</li>
+<li>Kota dengan listing sedikit (Jakarta Pusat) tidak stabil.</li>
+<li>Lisensi dataset di Kaggle berlabel Unknown; halaman ini hanya memuat hasil agregat, tanpa tautan atau teks iklan. Ketentuan situs asal belum dicek.</li>
+<li>Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Dataset (Kaggle): <a href="https://www.kaggle.com/datasets/nafisbarizki/daftar-harga-rumah-jabodetabek" target="_blank" rel="noopener">Daftar Harga Rumah Jabodetabek</a></li>
+<li>Folder dataset di GitHub (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/jabodetabek-house-price" target="_blank" rel="noopener">jabodetabek-house-price</a></li>
+<li>Repository: <a href="https://github.com/bagusbernadi/Project-8-Property-Price-Analysis" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-8-One-Pager.pdf">Project-8-One-Pager.pdf</a></li></ul></div>
+
+</main></body></html>
