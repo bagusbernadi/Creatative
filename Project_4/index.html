@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 4: Before–After Defect Reduction (QCC Insulation Damage)</title><meta name="description" content="Analisis before–after penurunan insulation damage wire harness setelah QCC (data simulasi): uji signifikansi, p-chart, dan estimasi penghematan.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 4: Before–After Defect Reduction (QCC Insulation Damage)"><meta property="og:description" content="Rate insulation damage turun 30% (3,0% ke 2,1%), signifikan dan stabil di p-chart.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 4: apakah penurunan defect setelah QCC benar-benar nyata?</h1><p><b>Tujuan project:</b> menguji apakah penurunan insulation damage setelah countermeasure QCC signifikan dan stabil, serta menghitung penghematan per tahun. Data simulasi.</p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur</span><span class="tag">Data simulasi</span><span class="tag">SQL · Python · statistik · Excel</span></div></header>
+
+<div class="note"><b>Data simulasi buatan sendiri</b> (seed tetap, 3 tipe harness, 2 shift, Jan–Okt 2026). Halaman ini membuktikan metode analisis before–after, bukan kondisi pabrik tertentu. Angka penghematan berlabel perkiraan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Apakah penurunan insulation damage setelah countermeasure QCC benar-benar signifikan dan stabil, dan berapa unit dan biaya yang dihemat per tahun?</dd>
+<dt>Data</dt><dd>Simulasi lini wire harness otomotif: 36.081 harness before (Jan–Jun) dan 23.644 after (Agu–Okt).</dd>
+<dt>Temuan utama</dt><dd>Rate insulation damage turun dari 3,04% ke 2,14% (turun 29,8% relatif); z-test p &lt; 0,001, selisih 0,65 sampai 1,16 poin (CI 95%).</dd>
+<dt>Keputusan yang didukung</dt><dd>Menjadikan countermeasure standar dan memantaunya dengan p-chart mingguan. Perkiraan penghematan sekitar Rp 128 juta per tahun <span class="est">perkiraan, simulasi</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, uji dua proporsi, p-chart, regresi logistik, dicek silang dengan pandas dan Excel. Tanpa machine learning.</dd>
+<dt>Catatan jujur</dt><dd>Before–after bukan eksperimen: volume naik, operator makin terampil, dan bracket berganti bersamaan. Tidak semua countermeasure terbukti berefek sendiri.</dd>
+</dl></div>
+
+<h2 id="r-temuan">Tiga temuan<small>Angka dari data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Efek</span><h3>Penurunan nyata dan stabil</h3>
+<p>Rate 3,04% → 2,14%, z = 6,69. Setelah disesuaikan operator, shift, dan tipe harness, odds ratio 0,68 (CI 0,61–0,76). Tidak ada minggu after di luar batas kendali p-chart.</p></div>
+<div class="card"><span class="q">Temuan 2 · Jumlah vs rate</span><h3>Jumlah NG menyesatkan</h3>
+<p>Volume after naik 31,1%, sehingga jumlah NG per bulan hanya turun 7,9% padahal rate turun 29,8%. Laporkan defect sebagai rate.</p></div>
+<div class="card"><span class="q">Temuan 3 · Sumber</span><h3>Dua sumber menyumbang penurunan</h3>
+<p>Cara perakitan (ID-01) turun 0,54 poin dan tepi bracket (ID-02) 0,35 poin; sumber lain nyaris tidak berubah (0,02 poin).</p></div>
+</div>
+
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Rate defect mingguan turun setelah countermeasure dan tetap rendah</h3><svg viewBox="0 0 640 300" role="img" aria-label="Rate insulation damage mingguan" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="620" y1="224.0" y2="224.0" stroke="#DADCE0"/><text x="42" y="228.0" text-anchor="end" font-size="12" fill="#5F6368">1%</text><line x1="48" x2="620" y1="182.0" y2="182.0" stroke="#DADCE0"/><text x="42" y="186.0" text-anchor="end" font-size="12" fill="#5F6368">2%</text><line x1="48" x2="620" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">3%</text><line x1="48" x2="620" y1="98.0" y2="98.0" stroke="#DADCE0"/><text x="42" y="102.0" text-anchor="end" font-size="12" fill="#5F6368">4%</text><line x1="48" x2="620" y1="56.0" y2="56.0" stroke="#DADCE0"/><text x="42" y="60.0" text-anchor="end" font-size="12" fill="#5F6368">5%</text><line x1="48" x2="620" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">6%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5 Jan</text><text x="129.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">16 Feb</text><text x="211.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">30 Mar</text><text x="293.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">11 Mei</text><text x="374.9" y="288" text-anchor="middle" font-size="12" fill="#5F6368">22 Jun</text><text x="456.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">3 Agu</text><text x="538.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">14 Sep</text><text x="620.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">26 Okt</text><line x1="48" x2="620" y1="138.3" y2="138.3" stroke="#D93025" stroke-dasharray="6 4" stroke-width="1.5"/><line x1="48" x2="620" y1="176.3" y2="176.3" stroke="#188038" stroke-dasharray="6 4" stroke-width="1.5"/><line x1="415.7" x2="415.7" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="419.7" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">CM1</text><line x1="456.6" x2="456.6" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="460.6" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">CM2</text><line x1="511.0" x2="511.0" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="515.0" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">CM3</text><polyline points="48.0,136.4 61.6,160.5 75.2,178.2 88.9,165.4 102.5,128.6 116.1,132.4 129.7,96.7 143.3,132.2 157.0,127.5 170.6,177.9 184.2,57.8 197.8,154.7 211.4,150.1 225.0,106.0 238.7,161.6 252.3,100.2 265.9,105.3 279.5,122.4 293.1,163.9 306.8,157.4 320.4,136.8 334.0,145.4 347.6,120.7 361.2,146.6 374.9,153.8 388.5,119.1 402.1,114.8 415.7,178.7 429.3,160.9 443.0,180.6 456.6,165.1 470.2,167.7 483.8,160.7 497.4,170.0 511.0,157.5 524.7,167.5 538.3,203.3 551.9,184.9 565.5,178.3 579.1,170.4 592.8,196.2 606.4,180.5 620.0,188.6" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="136.4" r="2.8" fill="#1A73E8"/><circle cx="61.6" cy="160.5" r="2.8" fill="#1A73E8"/><circle cx="75.2" cy="178.2" r="2.8" fill="#1A73E8"/><circle cx="88.9" cy="165.4" r="2.8" fill="#1A73E8"/><circle cx="102.5" cy="128.6" r="2.8" fill="#1A73E8"/><circle cx="116.1" cy="132.4" r="2.8" fill="#1A73E8"/><circle cx="129.7" cy="96.7" r="2.8" fill="#1A73E8"/><circle cx="143.3" cy="132.2" r="2.8" fill="#1A73E8"/><circle cx="157.0" cy="127.5" r="2.8" fill="#1A73E8"/><circle cx="170.6" cy="177.9" r="2.8" fill="#1A73E8"/><circle cx="184.2" cy="57.8" r="2.8" fill="#1A73E8"/><circle cx="197.8" cy="154.7" r="2.8" fill="#1A73E8"/><circle cx="211.4" cy="150.1" r="2.8" fill="#1A73E8"/><circle cx="225.0" cy="106.0" r="2.8" fill="#1A73E8"/><circle cx="238.7" cy="161.6" r="2.8" fill="#1A73E8"/><circle cx="252.3" cy="100.2" r="2.8" fill="#1A73E8"/><circle cx="265.9" cy="105.3" r="2.8" fill="#1A73E8"/><circle cx="279.5" cy="122.4" r="2.8" fill="#1A73E8"/><circle cx="293.1" cy="163.9" r="2.8" fill="#1A73E8"/><circle cx="306.8" cy="157.4" r="2.8" fill="#1A73E8"/><circle cx="320.4" cy="136.8" r="2.8" fill="#1A73E8"/><circle cx="334.0" cy="145.4" r="2.8" fill="#1A73E8"/><circle cx="347.6" cy="120.7" r="2.8" fill="#1A73E8"/><circle cx="361.2" cy="146.6" r="2.8" fill="#1A73E8"/><circle cx="374.9" cy="153.8" r="2.8" fill="#1A73E8"/><circle cx="388.5" cy="119.1" r="2.8" fill="#1A73E8"/><circle cx="402.1" cy="114.8" r="2.8" fill="#1A73E8"/><circle cx="415.7" cy="178.7" r="2.8" fill="#1A73E8"/><circle cx="429.3" cy="160.9" r="2.8" fill="#1A73E8"/><circle cx="443.0" cy="180.6" r="2.8" fill="#1A73E8"/><circle cx="456.6" cy="165.1" r="2.8" fill="#1A73E8"/><circle cx="470.2" cy="167.7" r="2.8" fill="#1A73E8"/><circle cx="483.8" cy="160.7" r="2.8" fill="#1A73E8"/><circle cx="497.4" cy="170.0" r="2.8" fill="#1A73E8"/><circle cx="511.0" cy="157.5" r="2.8" fill="#1A73E8"/><circle cx="524.7" cy="167.5" r="2.8" fill="#1A73E8"/><circle cx="538.3" cy="203.3" r="2.8" fill="#1A73E8"/><circle cx="551.9" cy="184.9" r="2.8" fill="#1A73E8"/><circle cx="565.5" cy="178.3" r="2.8" fill="#1A73E8"/><circle cx="579.1" cy="170.4" r="2.8" fill="#1A73E8"/><circle cx="592.8" cy="196.2" r="2.8" fill="#1A73E8"/><circle cx="606.4" cy="180.5" r="2.8" fill="#1A73E8"/><circle cx="620.0" cy="188.6" r="2.8" fill="#1A73E8"/></svg><p class="foot">Rate insulation damage per minggu. Garis merah putus-putus = rata-rata before (3,04%), hijau = after (2,14%). Garis kuning = tanggal CM1–CM3.</p></div>
+<div class="card fig"><h3>Jumlah NG turun sedikit, rate turun banyak, karena volume naik</h3><div class="row"><span class="n" style="width:190px">Volume produksi per bulan</span><span class="t"><span class="b" style="width:77.7%;background:#9AA0A6"></span></span><span class="v">+31,1%</span></div><div class="row"><span class="n" style="width:190px">Jumlah NG per bulan</span><span class="t"><span class="b" style="width:19.8%;background:#E37400"></span></span><span class="v">−7,9%</span></div><div class="row"><span class="n" style="width:190px">Rate insulation damage</span><span class="t"><span class="b" style="width:74.4%;background:#188038"></span></span><span class="v">−29,8%</span></div><p class="foot">Perubahan per bulan, after dibanding before.</p></div>
+<div class="card fig"><h3>Penurunan berasal dari cara perakitan dan tepi bracket</h3><svg viewBox="0 0 640 146" role="img" aria-label="Rate per sumber penyebab, before dan after" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><text x="250" y="14" font-size="12" fill="#5F6368">0</text><text x="240" y="43.0" text-anchor="end" font-size="13" fill="#202124">ID-01 cara perakitan</text><line x1="250.0" x2="528.5" y1="39.0" y2="39.0" stroke="#DADCE0" stroke-width="6" stroke-linecap="round"/><line x1="439.8" x2="528.5" y1="39.0" y2="39.0" stroke="#E37400" stroke-width="2"/><circle cx="528.5" cy="39.0" r="6" fill="#9AA0A6"/><circle cx="439.8" cy="39.0" r="6" fill="#1A73E8"/><text x="538.5" y="43.0" font-size="12" fill="#5F6368">1,69</text><text x="429.8" y="43.0" text-anchor="end" font-size="12" font-weight="700" fill="#1A73E8">1,15</text><text x="240" y="77.0" text-anchor="end" font-size="13" fill="#202124">ID-02 tepi bracket</text><line x1="250.0" x2="442.5" y1="73.0" y2="73.0" stroke="#DADCE0" stroke-width="6" stroke-linecap="round"/><line x1="384.7" x2="442.5" y1="73.0" y2="73.0" stroke="#E37400" stroke-width="2"/><circle cx="442.5" cy="73.0" r="6" fill="#9AA0A6"/><circle cx="384.7" cy="73.0" r="6" fill="#1A73E8"/><text x="452.5" y="77.0" font-size="12" fill="#5F6368">1,17</text><text x="374.7" y="77.0" text-anchor="end" font-size="12" font-weight="700" fill="#1A73E8">0,82</text><text x="240" y="111.0" text-anchor="end" font-size="13" fill="#202124">ID-03 lainnya</text><line x1="250.0" x2="280.6" y1="107.0" y2="107.0" stroke="#DADCE0" stroke-width="6" stroke-linecap="round"/><line x1="277.9" x2="280.6" y1="107.0" y2="107.0" stroke="#E37400" stroke-width="2"/><circle cx="280.6" cy="107.0" r="6" fill="#9AA0A6"/><circle cx="277.9" cy="107.0" r="6" fill="#1A73E8"/><text x="290.6" y="111.0" font-size="12" fill="#5F6368">0,19</text><text x="267.9" y="111.0" text-anchor="end" font-size="12" font-weight="700" fill="#1A73E8">0,17</text><circle cx="270" cy="134" r="5" fill="#9AA0A6"/><text x="280" y="138" font-size="12" fill="#5F6368">Before (Jan–Jun)</text><circle cx="440" cy="134" r="5" fill="#1A73E8"/><text x="450" y="138" font-size="12" fill="#5F6368">After (Agu–Okt)</text></svg><p class="foot">Rate defect per sumber penyebab (persen dari harness diproduksi).</p></div>
+<div class="card fig"><h3>Efek terukur untuk CM1 dan CM3; CM2 tidak terbedakan</h3><svg viewBox="0 0 640 190" role="img" aria-label="Odds ratio perubahan tingkat defect per countermeasure" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="458.6" x2="458.6" y1="14" y2="144" stroke="#5F6368" stroke-dasharray="5 4"/><text x="250.0" y="162" text-anchor="middle" font-size="12" fill="#5F6368">0,5</text><text x="351.2" y="162" text-anchor="middle" font-size="12" fill="#5F6368">0,7</text><text x="458.6" y="162" text-anchor="middle" font-size="12" fill="#5F6368">1,0</text><text x="559.8" y="162" text-anchor="middle" font-size="12" fill="#5F6368">1,4</text><text x="250.0" y="182" font-size="12" fill="#188038" font-weight="700">← defect lebih jarang</text><text x="600" y="182" text-anchor="end" font-size="12" fill="#D93025" font-weight="700">lebih sering →</text><text x="238" y="38" text-anchor="end" font-size="13" fill="#202124">CM1 cek isolasi (Wire Cutting)</text><line x1="287.4" x2="422.1" y1="34" y2="34" stroke="#188038" stroke-width="3"/><circle cx="354.7" cy="34" r="6" fill="#188038"/><text x="430.1" y="38" font-size="12" font-weight="700" fill="#188038">0,71</text><text x="238" y="84" text-anchor="end" font-size="13" fill="#202124">CM2 jig routing + SOP</text><line x1="407.1" x2="563.9" y1="80" y2="80" stroke="#9AA0A6" stroke-width="3"/><circle cx="485.5" cy="80" r="6" fill="#9AA0A6"/><text x="571.9" y="84" font-size="12" font-weight="700" fill="#9AA0A6">1,09</text><text x="238" y="130" text-anchor="end" font-size="13" fill="#202124">CM3 bracket in-house</text><line x1="342.4" x2="452.4" y1="126" y2="126" stroke="#188038" stroke-width="3"/><circle cx="397.4" cy="126" r="6" fill="#188038"/><text x="460.4" y="130" font-size="12" font-weight="700" fill="#188038">0,82</text></svg><p class="foot">Odds ratio perubahan setelah tanggal tiap countermeasure (CI 95%); hijau = signifikan, abu-abu = tidak. CM2 bertepatan dengan penurunan ID-01 yang sudah mulai lebih awal (titik ubah 21 hari sebelum tanggal CM2).</p></div>
+
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan pada data simulasi</small></h2>
+<div class="card"><ul class="t">
+<li><b>Jadikan ketiga countermeasure standar</b> dan pantau dengan p-chart mingguan memakai batas after.</li>
+<li><b>Laporkan defect sebagai rate</b> dengan p-value atau CI, bukan jumlah NG.</li>
+<li><b>Pertahankan pencatatan tanggal countermeasure</b> supaya efek tiap perbaikan dapat dipisahkan.</li></ul></div>
+<div class="scroll"><table><tr><th>Skenario (Rp 150.000 per harness)</th><th>Harness per tahun</th><th>Penghematan per tahun</th></tr>
+<tr><td>Batas bawah (CI 95%)</td><td>614</td><td>Rp 92 juta</td></tr>
+<tr class="sel"><td>Titik (hasil uji)</td><td>855</td><td>Rp 128 juta <span class="est">perkiraan, simulasi</span></td></tr>
+<tr><td>Batas atas (CI 95%)</td><td>1.097</td><td>Rp 165 juta</td></tr></table></div>
+<div class="note">Biaya Rp 150.000 per harness adalah asumsi. Penghematan = selisih rate × volume per bulan (after) × 12 × biaya per unit.</div>
+
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil identik dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 348 dari 348 lulus (dijalankan ulang).</li>
+<li>Cek silang vs Excel: 66 dari 66 lulus (hasil run sebelumnya, dihitung ulang oleh LibreOffice, bukan Microsoft Excel).</li>
+<li>Data kotor: tiga perlakuan (mentah, buang, perbaiki sesuai log) memberi penurunan 29,5%–31,0% dan semuanya signifikan.</li>
+<li>Fakta yang ditanam: 4 dari 5 ditemukan penuh; satu sebagian (tanggal tiap countermeasure tidak semuanya terlihat sebagai titik ubah).</li></ul></div>
+
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi:</b> hasil membuktikan metode, bukan kondisi pabrik.</li>
+<li><b>Before–after bukan eksperimen:</b> operator makin terampil, volume naik, dan bracket berganti bersamaan; pengaruh countermeasure tidak sepenuhnya terpisah.</li>
+<li>CM1 dan CM2 hanya berjarak 19 hari, sehingga efek keduanya sulit dipisahkan.</li>
+<li>Dashboard Streamlit belum di-deploy; kriteria keterbacaan belum diuji pada pengguna.</li></ul></div>
+
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Repository (generator data, SQL, notebook, infografik): <a href="https://github.com/bagusbernadi/Project-4-Insulation-Damage-Reduction" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-4-One-Pager.pdf">Project-4-One-Pager.pdf</a></li></ul>
+<p class="foot">Data: simulasi buatan sendiri; tidak memakai dataset publik atau data perusahaan.</p></div>
+
+</main></body></html>
