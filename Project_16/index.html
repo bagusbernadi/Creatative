@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 16: Learning Curve Analysis (simulasi)</title><meta name="description" content="Analisis simulasi kecepatan operator baru mencapai target output: median 11 hari vs standar 30 hari. SQL, Python, kurva power law.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 16: Learning Curve Analysis (simulasi)"><meta property="og:description" content="Pada data simulasi, median operator baru mencapai target dalam 11 hari kerja valid, jauh di bawah standar 30 hari; 90% sudah mencapai target pada hari ke-15.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 16: seberapa cepat operator baru mencapai target? (simulasi)</h1><p><b>Tujuan project:</b> menguji standar 30 hari untuk operator baru dengan data output harian, dan mencari apa yang membedakan operator cepat dan lambat. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · onboarding</span><span class="tag">DATA SIMULASI</span><span class="tag">SQL · Python · statistik</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> 10 operator baru dan 3 stasiun dibangkitkan dengan parameter yang sengaja ditanam (data kerja nyata tidak tersedia). Angka menunjukkan metode, bukan kondisi lini.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Seberapa cepat operator baru mencapai target output harian dibanding standar 30 hari, dan apa yang membedakan operator cepat dan lambat?</dd>
+<dt>Data</dt><dd>Simulasi: 10 operator baru, 3 stasiun, 489 hari valid dari 570 baris output harian; data dianonimkan.</dd>
+<dt>Temuan utama</dt><dd>Median time-to-target 11 hari kerja valid (CI 95% 7 sampai 15), jauh di bawah standar 30 hari (Wilcoxon p 0,001).</dd>
+<dt>Keputusan yang didukung</dt><dd>Pantau operator baru pada hari ke-10 dan ke-15; pada hari ke-15, 90% operator sudah mencapai target. Tinjau standar 30 hari setelah diuji dengan data nyata.</dd>
+<dt>Metode</dt><dd>Python (pandas, SciPy), DuckDB + SQL, kurva power law (dipilih dengan leave-one-operator-out), uji Wilcoxon, Kruskal-Wallis, Spearman, uji pemulihan parameter.</dd>
+<dt>Catatan jujur</dt><dd>Hanya 10 operator; perbedaan stasiun, batch, dan mentor tidak bisa dibedakan dari kebetulan (Kruskal-Wallis p 0,21). Output minggu pertama belum bisa memprediksi operator lambat (rho -0,35, p 0,32).</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Kecepatan</span><h3>Standar 30 hari tampak terlalu panjang</h3><p>Median 11 hari; rentang 6 sampai 23 hari. Semua operator mencapai target.</p></div>
+<div class="card"><span class="q">Temuan 2 · Pemantauan</span><h3>Hari ke-15 adalah titik cek yang masuk akal</h3><p>40% operator mencapai target pada hari ke-10 dan 90% pada hari ke-15 (CI 95% 60% sampai 98%).</p></div>
+<div class="card"><span class="q">Temuan 3 · Kualitas</span><h3>NG turun seiring masa kerja</h3><p>NG rate rata-rata 7,9% pada minggu 1–2 turun ke 2,3% pada dua minggu terakhir.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Semua operator mencapai target jauh sebelum hari ke-30</h3><div class="row"><span class="n" style="width:150px">OP-02 (ST-A)</span><span class="t"><span class="b" style="width:20.0%;background:#1A73E8"></span></span><span class="v">6 hari</span></div><div class="row"><span class="n" style="width:150px">OP-08 (ST-C)</span><span class="t"><span class="b" style="width:23.3%;background:#1A73E8"></span></span><span class="v">7 hari</span></div><div class="row"><span class="n" style="width:150px">OP-10 (ST-C)</span><span class="t"><span class="b" style="width:23.3%;background:#1A73E8"></span></span><span class="v">7 hari</span></div><div class="row"><span class="n" style="width:150px">OP-09 (ST-C)</span><span class="t"><span class="b" style="width:30.0%;background:#1A73E8"></span></span><span class="v">9 hari</span></div><div class="row"><span class="n" style="width:150px">OP-06 (ST-B)</span><span class="t"><span class="b" style="width:36.7%;background:#1A73E8"></span></span><span class="v">11 hari</span></div><div class="row"><span class="n" style="width:150px">OP-01 (ST-A)</span><span class="t"><span class="b" style="width:36.7%;background:#1A73E8"></span></span><span class="v">11 hari</span></div><div class="row"><span class="n" style="width:150px">OP-05 (ST-B)</span><span class="t"><span class="b" style="width:43.3%;background:#1A73E8"></span></span><span class="v">13 hari</span></div><div class="row"><span class="n" style="width:150px">OP-04 (ST-A)</span><span class="t"><span class="b" style="width:50.0%;background:#E37400"></span></span><span class="v">15 hari</span></div><div class="row"><span class="n" style="width:150px">OP-07 (ST-B)</span><span class="t"><span class="b" style="width:50.0%;background:#E37400"></span></span><span class="v">15 hari</span></div><div class="row"><span class="n" style="width:150px">OP-03 (ST-A)</span><span class="t"><span class="b" style="width:76.7%;background:#E37400"></span></span><span class="v">23 hari</span></div><p class="foot">Hari kerja valid sampai target (tiga hari berturut-turut ≥ target); oranye = di atas batas tertinggal (persentil 75).</p></div>
+<div class="card fig"><h3>Sembilan dari sepuluh operator sudah mencapai target pada hari ke-15</h3><svg viewBox="0 0 640 300" role="img" aria-label="% operator yang sudah mencapai target" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="620" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">25%</text><line x1="48" x2="620" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">50%</text><line x1="48" x2="620" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">75%</text><line x1="48" x2="620" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">100%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">0</text><text x="143.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5</text><text x="238.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">10</text><text x="334.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">15</text><text x="429.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">20</text><text x="524.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">25</text><text x="620.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">30</text><line x1="524.7" x2="524.7" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="528.7" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">standar 30 hari</text><polyline points="48.0,266.0 143.3,266.0 238.7,165.2 334.0,39.2 429.3,39.2 524.7,14.0 620.0,14.0" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="266.0" r="2.8" fill="#1A73E8"/><circle cx="143.3" cy="266.0" r="2.8" fill="#1A73E8"/><circle cx="238.7" cy="165.2" r="2.8" fill="#1A73E8"/><circle cx="334.0" cy="39.2" r="2.8" fill="#1A73E8"/><circle cx="429.3" cy="39.2" r="2.8" fill="#1A73E8"/><circle cx="524.7" cy="14.0" r="2.8" fill="#1A73E8"/><circle cx="620.0" cy="14.0" r="2.8" fill="#1A73E8"/></svg><p class="foot">Persentase kumulatif operator yang mencapai target; garis kuning = standar 30 hari.</p></div>
+<div class="card fig"><h3>NG rate turun cepat pada minggu-minggu awal</h3><svg viewBox="0 0 640 300" role="img" aria-label="NG rate rata-rata menurut minggu masa kerja" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="620" y1="215.6" y2="215.6" stroke="#DADCE0"/><text x="42" y="219.6" text-anchor="end" font-size="12" fill="#5F6368">2%</text><line x1="48" x2="620" y1="165.2" y2="165.2" stroke="#DADCE0"/><text x="42" y="169.2" text-anchor="end" font-size="12" fill="#5F6368">4%</text><line x1="48" x2="620" y1="114.8" y2="114.8" stroke="#DADCE0"/><text x="42" y="118.8" text-anchor="end" font-size="12" fill="#5F6368">6%</text><line x1="48" x2="620" y1="64.4" y2="64.4" stroke="#DADCE0"/><text x="42" y="68.4" text-anchor="end" font-size="12" fill="#5F6368">8%</text><line x1="48" x2="620" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">10%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">1</text><text x="100.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">2</text><text x="152.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">3</text><text x="204.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">4</text><text x="256.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5</text><text x="308.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">6</text><text x="360.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">7</text><text x="412.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">8</text><text x="464.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">9</text><text x="516.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">10</text><text x="568.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">11</text><text x="620.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">12</text><polyline points="48.0,50.1 100.0,84.2 152.0,112.2 204.0,133.1 256.0,151.7 308.0,167.7 360.0,178.8 412.0,189.0 464.0,198.7 516.0,203.8 568.0,208.0 620.0,208.6" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="48.0" cy="50.1" r="2.8" fill="#D93025"/><circle cx="100.0" cy="84.2" r="2.8" fill="#D93025"/><circle cx="152.0" cy="112.2" r="2.8" fill="#D93025"/><circle cx="204.0" cy="133.1" r="2.8" fill="#D93025"/><circle cx="256.0" cy="151.7" r="2.8" fill="#D93025"/><circle cx="308.0" cy="167.7" r="2.8" fill="#D93025"/><circle cx="360.0" cy="178.8" r="2.8" fill="#D93025"/><circle cx="412.0" cy="189.0" r="2.8" fill="#D93025"/><circle cx="464.0" cy="198.7" r="2.8" fill="#D93025"/><circle cx="516.0" cy="203.8" r="2.8" fill="#D93025"/><circle cx="568.0" cy="208.0" r="2.8" fill="#D93025"/><circle cx="620.0" cy="208.6" r="2.8" fill="#D93025"/></svg><p class="foot">Rata-rata NG rate semua operator menurut minggu masa kerja; minggu akhir hanya mencakup sebagian operator.</p></div>
+<div class="card fig"><h3>Stasiun C paling cepat, tetapi sampel terlalu kecil untuk memastikan</h3><div class="row"><span class="n" style="width:150px">ST-A (n=4)</span><span class="t"><span class="b" style="width:43.3%;background:#1A73E8"></span></span><span class="v">13 hari</span></div><div class="row"><span class="n" style="width:150px">ST-B (n=3)</span><span class="t"><span class="b" style="width:43.3%;background:#1A73E8"></span></span><span class="v">13 hari</span></div><div class="row"><span class="n" style="width:150px">ST-C (n=3)</span><span class="t"><span class="b" style="width:23.3%;background:#1A73E8"></span></span><span class="v">7 hari</span></div><p class="foot">Median time-to-target per stasiun (3–4 operator per stasiun); perbedaan tidak signifikan.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pantau pada hari ke-10 dan ke-15</b>; operator yang belum mencapai target pada hari ke-15 perlu bantuan.</li>
+<li><b>Tinjau standar 30 hari</b>, tetapi uji dengan data kerja nyata sebelum mengubahnya.</li>
+<li><b>Perhatikan NG rate di minggu pertama</b>.</li></ul></div>
+<div class="scroll"><table><tr><th>Skenario (20 operator baru per tahun)</th><th>Median time-to-target</th><th>Hari onboarding dihemat per tahun</th></tr>
+<tr class=sel><td>median data (dasar)</td><td>11 hari</td><td>380 <span class="est">perkiraan</span></td></tr><tr><td>batas bawah CI median</td><td>7 hari</td><td>460 <span class="est">perkiraan</span></td></tr><tr><td>batas atas CI median</td><td>15 hari</td><td>300 <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: standar 30 hari dibandingkan median data; jumlah 20 operator baru per tahun adalah asumsi, bukan data.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 10 dari 10 operator cocok.</li>
+<li>Cek silang SQL vs Excel (dihitung ulang dengan LibreOffice): 3 dari 3 cocok.</li>
+<li>Pemilihan model kurva: power law RMSE 0,0832 vs eksponensial 0,0878 dan linear per segmen 0,0920 (leave-one-operator-out).</li>
+<li>Uji pemulihan parameter yang ditanam: P dan b dalam toleransi pada 9 dan 9 dari 10 operator; F1 bias positif (0,07) akibat seleksi hari valid, tidak diperbaiki setelah melihat hasil.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>: tidak boleh dikutip sebagai fakta lini produksi.</li>
+<li>Sampel kecil: 10 operator, 3 stasiun dengan 3–4 operator. Batch (B1 vs B2: median 7 vs 15 hari, p 0,07) dan mentor tidak bisa dibedakan dari kebetulan.</li>
+<li>Tidak ada operator yang belum mencapai target (censored), jadi penanganan data tersensor belum teruji.</li>
+<li>Dashboard belum di-deploy; notebook dan template Excel tidak dibuat.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Repository (generator simulasi, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-16-Learning-Curve-Analysis" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-16-One-Pager.pdf">Project-16-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

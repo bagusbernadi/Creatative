@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 15: SPC Control Chart Dashboard (simulasi)</title><meta name="description" content="Dashboard SPC dengan alert otomatis pada data simulasi push test: X-bar/R, Cpk, ARL. Python, SQL, Streamlit.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 15: SPC Control Chart Dashboard (simulasi)"><meta property="og:description" content="Pada data simulasi, grafik X-bar dan R mendeteksi ketiga gangguan proses yang ditanam; false alarm di luar gangguan 2,3% run.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 15: kapan proses keluar kendali? (simulasi)</h1><p><b>Tujuan project:</b> memantau kekuatan ikatan glue lensa lampu dari force push test dengan grafik kendali dan alert otomatis. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: analisis selesai, finalisasi belum</span><span class="tag">Manufaktur · SPC</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · SQL · Streamlit</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> 600 run push test dibangkitkan dengan 3 gangguan proses yang sengaja ditanam. Hasil membuktikan metode bekerja pada gangguan itu, bukan kondisi pabrik nyata.</div>
+<div class="note"><b>Status: analisis dan dashboard selesai, finalisasi belum.</b> Rekomendasi akhir, aturan alert final, dan perhitungan dampak belum dikerjakan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Kapan proses perekatan lensa lampu keluar kendali atau Cpk turun di bawah 1,33, dan apakah sinyalnya terlihat sebelum banyak hasil uji NG?</dd>
+<dt>Data</dt><dd>Simulasi: 592 run push test (satu file per run), 4 aliran (2 model × 2 kondisi), 592 run dipakai.</dd>
+<dt>Temuan utama</dt><dd>Grafik X-bar dan R mendeteksi ketiga gangguan yang ditanam: drift Model B sesudah oven (alert pertama 26 Mei, di run pertama jendela), gangguan mendadak Model A sebelum oven, dan sebaran membesar di mesin PT-02 (terdeteksi di 4 dari 4 aliran).</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai aturan X-bar + R dengan limit dari baseline 14 hari; false alarm di luar jendela gangguan 2,3% run untuk X-bar dan 0,5% untuk R.</dd>
+<dt>Metode</dt><dd>Python (pandas, SciPy), DuckDB + SQL, grafik kendali X-bar/R, aturan Western Electric, Cpk dengan CI, simulasi Monte Carlo ARL, dashboard Streamlit.</dd>
+<dt>Catatan jujur</dt><dd>Gangguan Model A sebelum oven hanya 2 run di jendela, terlalu sedikit untuk kesimpulan kuat. Hasil bergantung pada pilihan baseline (lihat grafik 4).</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Drift</span><h3>Drift bertahap terdeteksi sejak run pertama</h3><p>Model B sesudah oven: alert X-bar pertama 26 Mei di run pertama jendela; 52 dari 52 run di jendela memicu alert.</p></div>
+<div class="card"><span class="q">Temuan 2 · Capability</span><h3>Baseline sehat, Cpk di atas 1,33</h3><p>Cpk baseline 1,98 sampai 2,63 di semua aliran; sesudah oven 1.366 g lebih tinggi pada Model A.</p></div>
+<div class="card"><span class="q">Temuan 3 · Kecepatan</span><h3>Pergeseran besar cepat tertangkap</h3><p>Rata-rata 10,8 run untuk pergeseran 1σ, 3,3 untuk 2σ, 1,6 untuk 3σ (Monte Carlo, 2.000 replikasi).</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Rata-rata gaya Model B sesudah oven turun melewati batas bawah</h3><svg viewBox="0 0 640 300" role="img" aria-label="X-bar (rata-rata gaya per run, ribu g)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="590" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">2</text><line x1="48" x2="590" y1="215.6" y2="215.6" stroke="#DADCE0"/><text x="42" y="219.6" text-anchor="end" font-size="12" fill="#5F6368">4</text><line x1="48" x2="590" y1="165.2" y2="165.2" stroke="#DADCE0"/><text x="42" y="169.2" text-anchor="end" font-size="12" fill="#5F6368">6</text><line x1="48" x2="590" y1="114.8" y2="114.8" stroke="#DADCE0"/><text x="42" y="118.8" text-anchor="end" font-size="12" fill="#5F6368">8</text><line x1="48" x2="590" y1="64.4" y2="64.4" stroke="#DADCE0"/><text x="42" y="68.4" text-anchor="end" font-size="12" fill="#5F6368">10</text><line x1="48" x2="590" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">12</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">1 Apr</text><text x="136.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">16 Apr</text><text x="224.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">1 Mei</text><text x="313.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">13 Mei</text><text x="401.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">28 Mei</text><text x="490.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">9 Jun</text><text x="578.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">23 Jun</text><line x1="48" x2="590" y1="74.5" y2="74.5" stroke="#D93025" stroke-dasharray="6 4" stroke-width="1.5"/><text x="596" y="78.5" font-size="12" fill="#D93025" font-weight="700">UCL</text><line x1="48" x2="590" y1="107.3" y2="107.3" stroke="#9AA0A6" stroke-dasharray="6 4" stroke-width="1.5"/><text x="596" y="111.3" font-size="12" fill="#9AA0A6" font-weight="700">CL</text><line x1="48" x2="590" y1="140.1" y2="140.1" stroke="#D93025" stroke-dasharray="6 4" stroke-width="1.5"/><text x="596" y="144.1" font-size="12" fill="#D93025" font-weight="700">LCL</text><line x1="394.0" x2="394.0" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="398.0" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">alert drift</text><polyline points="48.0,108.2 51.8,95.3 55.7,100.8 59.5,109.4 63.4,106.0 67.2,107.7 71.1,120.2 74.9,111.9 78.8,125.0 82.6,111.2 86.4,101.9 90.3,119.9 94.1,97.0 98.0,115.3 101.8,128.7 105.7,108.7 109.5,101.7 113.3,100.7 117.2,94.6 121.0,104.5 124.9,98.5 128.7,102.4 132.6,97.6 136.4,47.9 140.3,105.2 144.1,119.9 147.9,113.2 151.8,80.9 155.6,103.8 159.5,110.1 163.3,105.8 167.2,110.5 171.0,112.8 174.9,88.7 178.7,106.2 182.5,129.3 186.4,102.3 190.2,102.1 194.1,127.8 197.9,133.8 201.8,136.8 205.6,108.0 209.4,115.3 213.3,108.9 217.1,91.2 221.0,93.8 224.8,108.6 228.7,113.1 232.5,108.3 236.4,114.8 240.2,125.3 244.0,123.2 247.9,82.3 251.7,115.7 255.6,113.8 259.4,103.4 263.3,104.8 267.1,105.8 271.0,111.1 274.8,99.5 278.6,117.2 282.5,99.3 286.3,102.3 290.2,123.1 294.0,107.3 297.9,102.6 301.7,106.3 305.5,90.0 309.4,122.4 313.2,128.1 317.1,105.6 320.9,110.8 324.8,105.0 328.6,120.7 332.5,106.5 336.3,111.7 340.1,90.9 344.0,104.2 347.8,108.7 351.7,107.2 355.5,101.2 359.4,119.2 363.2,100.6 367.0,114.6 370.9,106.0 374.7,119.0 378.6,83.3 382.4,132.7 386.3,117.5 390.1,98.6 394.0,156.2 397.8,162.9 401.6,147.5 405.5,164.9 409.3,169.7 413.2,188.7 417.0,193.8 420.9,215.0 424.7,225.4 428.6,218.2 432.4,245.8 436.2,240.5 440.1,237.9 443.9,253.6 447.8,243.7 451.6,234.1 455.5,232.2 459.3,245.7 463.1,229.2 467.0,225.7 470.8,229.8 474.7,233.4 478.5,252.3 482.4,251.8 486.2,247.9 490.1,257.3 493.9,242.9 497.7,241.0 501.6,238.4 505.4,250.2 509.3,229.7 513.1,262.1 517.0,242.7 520.8,254.3 524.7,232.6 528.5,241.3 532.3,238.9 536.2,256.3 540.0,246.6 543.9,230.8 547.7,218.0 551.6,239.9 555.4,239.2 559.2,243.7 563.1,253.6 566.9,243.9 570.8,231.1 574.6,242.5 578.5,231.7 582.3,236.7 586.2,236.3 590.0,240.2" fill="none" stroke="#1A73E8" stroke-width="2.4"/></svg><p class="foot">Grafik X-bar per run, Model B sesudah oven; garis putus merah = batas kendali (UCL, LCL) dari baseline 1–14 April; garis kuning = alert pertama dari drift (26 Mei); alert 16 April berasal dari gangguan PT-02.</p></div>
+<div class="card fig"><h3>Semua aliran memiliki Cpk baseline di atas target 1,33</h3><div class="row"><span class="n" style="width:150px">Model A · sesudah oven</span><span class="t"><span class="b" style="width:87.6%;background:#1A73E8"></span></span><span class="v">2,63</span></div><div class="row"><span class="n" style="width:150px">Model B · sesudah oven</span><span class="t"><span class="b" style="width:77.9%;background:#1A73E8"></span></span><span class="v">2,34</span></div><div class="row"><span class="n" style="width:150px">Model A · sebelum oven</span><span class="t"><span class="b" style="width:72.9%;background:#1A73E8"></span></span><span class="v">2,19</span></div><div class="row"><span class="n" style="width:150px">Model B · sebelum oven</span><span class="t"><span class="b" style="width:65.9%;background:#1A73E8"></span></span><span class="v">1,98</span></div><p class="foot">Cpk baseline per aliran (target 1,33).</p></div>
+<div class="card fig"><h3>Pergeseran 1σ butuh sekitar 11 run untuk terdeteksi; 3σ hanya sekitar 2</h3><svg viewBox="0 0 640 230" role="img" aria-label="Rata-rata run sampai alert menurut besar pergeseran" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="196.0" y2="196.0" stroke="#DADCE0"/><text x="42" y="200.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="620" y1="151.0" y2="151.0" stroke="#DADCE0"/><text x="42" y="155.0" text-anchor="end" font-size="12" fill="#5F6368">3</text><line x1="48" x2="620" y1="106.0" y2="106.0" stroke="#DADCE0"/><text x="42" y="110.0" text-anchor="end" font-size="12" fill="#5F6368">6</text><line x1="48" x2="620" y1="61.0" y2="61.0" stroke="#DADCE0"/><text x="42" y="65.0" text-anchor="end" font-size="12" fill="#5F6368">9</text><line x1="48" x2="620" y1="16.0" y2="16.0" stroke="#DADCE0"/><text x="42" y="20.0" text-anchor="end" font-size="12" fill="#5F6368">12</text><rect x="78.5" y="33.9" width="129.7" height="162.1" rx="3" fill="#E37400"/><text x="143.3" y="28.9" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">10,8</text><text x="143.3" y="210" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 143.3 210)">1σ</text><rect x="269.2" y="146.2" width="129.7" height="49.8" rx="3" fill="#1A73E8"/><text x="334.0" y="141.2" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">3,3</text><text x="334.0" y="210" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 334.0 210)">2σ</text><rect x="459.8" y="171.3" width="129.7" height="24.7" rx="3" fill="#188038"/><text x="524.7" y="166.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">1,6</text><text x="524.7" y="210" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 524.7 210)">3σ</text></svg><p class="foot">Rata-rata jumlah run sampai alert (ARL1) hasil simulasi Monte Carlo.</p></div>
+<div class="card fig"><h3>Baseline lebih pendek memberi lebih banyak false alarm</h3><div class="row"><span class="n" style="width:150px">7 hari</span><span class="t"><span class="b" style="width:72.8%;background:#1A73E8"></span></span><span class="v">3,6%</span></div><div class="row"><span class="n" style="width:150px">14 hari (default)</span><span class="t"><span class="b" style="width:46.0%;background:#E37400"></span></span><span class="v">2,3%</span></div><div class="row"><span class="n" style="width:150px">21 hari</span><span class="t"><span class="b" style="width:38.0%;background:#1A73E8"></span></span><span class="v">1,9%</span></div><p class="foot">False alarm X-bar per run di luar jendela gangguan menurut panjang baseline; baseline 21 hari sudah memuat awal gangguan PT-02 dan menurunkan deteksi.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Belum final</small></h2>
+<div class="card"><ul class="t">
+<li><b>Gunakan X-bar dan R</b> dengan baseline bersih 14 hari sebagai aturan alert awal.</li>
+<li><b>Periksa mesin PT-02</b> bila alert R muncul di banyak aliran sekaligus (tanda sebaran mesin, bukan model).</li>
+<li><b>Tinjau Cpk bergulir</b> berdampingan dengan grafik kendali.</li></ul></div>
+<div class="note">Dampak (NG terhindari) belum dihitung. Angka dampak akan diberi label perkiraan setelah aturan alert final.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 16 dari 16 nilai sama.</li>
+<li>Data kotor yang disisipkan tertangkap saat cleaning: 27 entri log, 0 run dikecualikan karena sampel valid kurang dari 5.</li>
+<li>Dashboard Streamlit: 3 dari 3 tes otomatis lulus.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>: gangguan sengaja ditanam; deteksi di data nyata akan lebih sulit.</li>
+<li>Gangguan Model A sebelum oven hanya 2 run, jadi deteksi belum kuat.</li>
+<li>Hasil sensitif terhadap panjang baseline; 14 hari dipilih sebagai baseline bersih terpanjang.</li>
+<li>Rekomendasi final dan dampak belum dikerjakan; GitHub Actions belum. Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Repository (generator data, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-15-SPC-Control-Chart-Dashboard" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-15-One-Pager.pdf">Project-15-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

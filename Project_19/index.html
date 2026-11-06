@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 19: Data Quality Audit & Anti-Bypass Template (simulasi)</title><meta name="description" content="Audit kualitas data log Excel operator dan template anti-bypass pada data simulasi. Python, DuckDB, Excel.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 19: Data Quality Audit & Anti-Bypass Template (simulasi)"><meta property="og:description" content="Pada data simulasi, template menurunkan error log operator dari 66,9 ke 1,6 per 1.000 entri (turun 97,5%).">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 19: seberapa banyak error input operator bisa dicegah template? (simulasi)</h1><p><b>Tujuan project:</b> mengukur seberapa sering data log operator salah, kosong, atau menimpa rumus, lalu menguji template Excel tervalidasi dan terkunci. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (belum diuji di lapangan)</span><span class="tag">Manufaktur · Excel</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · Excel</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Log operator dibangkitkan lengkap dengan error yang ditanam; penurunan error pada template ditentukan asumsi generator dan belum diuji di lapangan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Seberapa sering data yang diisi operator di log Excel salah, dikosongkan, atau menimpa rumus, dan berapa yang bisa dicegah template tervalidasi dan terkunci?</dd>
+<dt>Data</dt><dd>Simulasi: 1.839 entri log lama dan 1.822 entri log template, Juli–September 2026, dengan 155 error ditanam di log lama.</dd>
+<dt>Temuan utama</dt><dd>Log lama: <b>66,9</b> pelanggaran per 1.000 entri; template: <b>1,6</b> (turun 97,5%, CI mulai 94,3%). Penyebab terbesar kolom wajib kosong.</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai template dan baca kolom Cek tiap akhir shift. Estimasi hemat sekitar 6,6 jam koreksi per bulan <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Audit 7 aturan (R01–R07) dengan pandas, audit rumus dengan openpyxl, cek silang DuckDB dan Excel (LibreOffice), CI Wilson, chi-square dengan Holm, uji pemulihan error tertanam.</dd>
+<dt>Catatan jujur</dt><dd>Audit hanya menemukan 77,4% error tertanam (recall 100% tidak tercapai); R01 hanya 14% karena definisinya ambigu. Template belum bebas error (3 pelanggaran tersisa).</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Log lama</span><h3>Kolom wajib kosong paling sering</h3><p>R03 19,6 per 1.000 entri, disusul rumus Sisa ditimpa angka (R05, 12,5). 23 sel ditimpa; hanya 9 yang kebetulan sama dengan rumus.</p></div>
+<div class="card"><span class="q">Temuan 2 · Template</span><h3>Turun 97,5%, tapi tidak nol</h3><p>123 → 3 pelanggaran: 2 baris ganda (R06) dan 1 carry-over yang putus (R07). Dilewati dan bypass nol.</p></div>
+<div class="card"><span class="q">Temuan 3 · Pola</span><h3>Error tersebar merata</h3><p>Tidak terpusat di shift malam (p Holm 1,00) atau bulan ketiga (p 0,51); carry-over putus 6 dari 23 pasangan bulan.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Kolom wajib kosong adalah pelanggaran terbanyak di log lama</h3><div class="row"><span class="n" style="width:150px">R03 Kolom wajib kosong</span><span class="t"><span class="b" style="width:78.3%;background:#E37400"></span></span><span class="v">19,6</span></div><div class="row"><span class="n" style="width:150px">R05 Rumus Sisa ditimpa angka</span><span class="t"><span class="b" style="width:50.0%;background:#1A73E8"></span></span><span class="v">12,5</span></div><div class="row"><span class="n" style="width:150px">R06 Baris ganda</span><span class="t"><span class="b" style="width:41.3%;background:#1A73E8"></span></span><span class="v">10,3</span></div><div class="row"><span class="n" style="width:150px">R04 Nilai di luar daftar baku</span><span class="t"><span class="b" style="width:39.2%;background:#1A73E8"></span></span><span class="v">9,8</span></div><div class="row"><span class="n" style="width:150px">R02 Qty bukan bilangan bulat ≥ 0</span><span class="t"><span class="b" style="width:32.6%;background:#1A73E8"></span></span><span class="v">8,2</span></div><div class="row"><span class="n" style="width:150px">R01 Qty melebihi stok</span><span class="t"><span class="b" style="width:13.1%;background:#1A73E8"></span></span><span class="v">3,3</span></div><div class="row"><span class="n" style="width:150px">R07 Carry-over bulan putus</span><span class="t"><span class="b" style="width:13.1%;background:#1A73E8"></span></span><span class="v">3,3</span></div><p class="foot">Pelanggaran per 1.000 entri per aturan, log lama.</p></div>
+<div class="card fig"><h3>Template menekan salah isi, dilewati, dan bypass hampir ke nol</h3><div class="row"><span class="n" style="width:150px">salah isi · log lama</span><span class="t"><span class="b" style="width:87.0%;background:#D93025"></span></span><span class="v">34,8</span></div><div class="row"><span class="n" style="width:150px">salah isi · template</span><span class="t"><span class="b" style="width:4.1%;background:#188038"></span></span><span class="v">1,6</span></div><div class="row"><span class="n" style="width:150px">dilewati · log lama</span><span class="t"><span class="b" style="width:48.9%;background:#D93025"></span></span><span class="v">19,6</span></div><div class="row"><span class="n" style="width:150px">dilewati · template</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0,0</span></div><div class="row"><span class="n" style="width:150px">bypass · log lama</span><span class="t"><span class="b" style="width:31.3%;background:#D93025"></span></span><span class="v">12,5</span></div><div class="row"><span class="n" style="width:150px">bypass · template</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0,0</span></div><p class="foot">Pelanggaran per 1.000 entri menurut kategori.</p></div>
+<div class="card fig"><h3>Error di log lama tinggi hampir setiap minggu; di template hampir tidak ada</h3><svg viewBox="0 0 640 300" role="img" aria-label="Error per 1.000 entri per minggu" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="580" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="580" y1="182.0" y2="182.0" stroke="#DADCE0"/><text x="42" y="186.0" text-anchor="end" font-size="12" fill="#5F6368">40</text><line x1="48" x2="580" y1="98.0" y2="98.0" stroke="#DADCE0"/><text x="42" y="102.0" text-anchor="end" font-size="12" fill="#5F6368">80</text><line x1="48" x2="580" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">120</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W27</text><text x="88.9" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W28</text><text x="129.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W29</text><text x="170.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W30</text><text x="211.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W31</text><text x="252.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W32</text><text x="293.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W33</text><text x="334.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W34</text><text x="375.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W35</text><text x="416.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W36</text><text x="457.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W37</text><text x="498.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W38</text><text x="539.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W39</text><text x="580.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W40</text><polyline points="48.0,143.9 88.9,131.0 129.8,161.0 170.8,161.7 211.7,162.5 252.6,104.5 293.5,146.9 334.5,176.6 375.4,103.3 416.3,27.7 457.2,44.2 498.2,73.7 539.1,162.5 580.0,228.5" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="48.0" cy="143.9" r="2.8" fill="#D93025"/><circle cx="88.9" cy="131.0" r="2.8" fill="#D93025"/><circle cx="129.8" cy="161.0" r="2.8" fill="#D93025"/><circle cx="170.8" cy="161.7" r="2.8" fill="#D93025"/><circle cx="211.7" cy="162.5" r="2.8" fill="#D93025"/><circle cx="252.6" cy="104.5" r="2.8" fill="#D93025"/><circle cx="293.5" cy="146.9" r="2.8" fill="#D93025"/><circle cx="334.5" cy="176.6" r="2.8" fill="#D93025"/><circle cx="375.4" cy="103.3" r="2.8" fill="#D93025"/><circle cx="416.3" cy="27.7" r="2.8" fill="#D93025"/><circle cx="457.2" cy="44.2" r="2.8" fill="#D93025"/><circle cx="498.2" cy="73.7" r="2.8" fill="#D93025"/><circle cx="539.1" cy="162.5" r="2.8" fill="#D93025"/><circle cx="580.0" cy="228.5" r="2.8" fill="#D93025"/><polyline points="48.0,266.0 88.9,266.0 129.8,266.0 170.8,251.1 211.7,266.0 252.6,251.0 293.5,266.0 334.5,266.0 375.4,266.0 416.3,266.0 457.2,266.0 498.2,266.0 539.1,251.1 580.0,266.0" fill="none" stroke="#188038" stroke-width="2.4"/><circle cx="48.0" cy="266.0" r="2.8" fill="#188038"/><circle cx="88.9" cy="266.0" r="2.8" fill="#188038"/><circle cx="129.8" cy="266.0" r="2.8" fill="#188038"/><circle cx="170.8" cy="251.1" r="2.8" fill="#188038"/><circle cx="211.7" cy="266.0" r="2.8" fill="#188038"/><circle cx="252.6" cy="251.0" r="2.8" fill="#188038"/><circle cx="293.5" cy="266.0" r="2.8" fill="#188038"/><circle cx="334.5" cy="266.0" r="2.8" fill="#188038"/><circle cx="375.4" cy="266.0" r="2.8" fill="#188038"/><circle cx="416.3" cy="266.0" r="2.8" fill="#188038"/><circle cx="457.2" cy="266.0" r="2.8" fill="#188038"/><circle cx="498.2" cy="266.0" r="2.8" fill="#188038"/><circle cx="539.1" cy="251.1" r="2.8" fill="#188038"/><circle cx="580.0" cy="266.0" r="2.8" fill="#188038"/></svg><p class="foot">Error per 1.000 entri per minggu (W27–W40, 2026).</p></div>
+<div class="card fig"><h3>Audit menangkap hampir semua aturan, kecuali R01 dan sebagian R07</h3><div class="row"><span class="n" style="width:150px">R01</span><span class="t"><span class="b" style="width:14.3%;background:#E37400"></span></span><span class="v">14%</span></div><div class="row"><span class="n" style="width:150px">R02</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">R03</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">R04</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">R05</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">R06</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">R07</span><span class="t"><span class="b" style="width:62.5%;background:#E37400"></span></span><span class="v">62%</span></div><p class="foot">Recall per aturan terhadap error yang ditanam (log lama). R01 rendah karena definisi stok tersedia lebih longgar dari rancangan literal.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pakai template</b> dengan proteksi sheet dan baca kolom Cek di akhir tiap shift.</li>
+<li><b>Audit bulanan</b> mulai dari kolom wajib kosong dan sel Sisa yang ditimpa.</li>
+<li><b>Sepakati definisi R01</b> dengan pemilik proses; definisi literal memberi 910 pelanggaran, definisi stok tersedia hanya 6.</li>
+<li><b>Tambah cek baris ganda dan carry-over</b>: dua hal ini yang masih lolos dari template.</li></ul></div>
+<div class="scroll"><table><tr><th>Dampak</th><th>Estimasi</th></tr>
+<tr class="sel"><td>Koreksi manual dihindari</td><td>sekitar 6,6 jam per bulan <span class="est">perkiraan</span> (CI 5,4–7,9), sekitar 40 error tercegah per bulan</td></tr></table></div>
+<div class="note">Asumsi: 10 menit koreksi per error; sekitar 610 entri per bulan (rata-rata dua versi).</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang pandas vs loop Python, DuckDB, dan Excel (LibreOffice): 48 dari 48 cocok.</li>
+<li>Uji template: 16 dari 17 cek lulus penuh; satu cek (ABNORMAL == R01 pada data uji) cocok 1.821 dari 1.822 entri.</li>
+<li>Sidik jari data simulasi cocok dengan DataCenter (SHA-256).</li>
+<li>Hipotesis: H1 Sebagian, H2 Terbukti, H3 Tidak terbukti, H4 Tidak terbukti, H5 Terbukti, H6 Terbukti; bunyi dan ambang rancangan tidak diubah.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; penurunan error ditentukan asumsi generator dan belum diuji di lapangan.</li>
+<li>Recall error tertanam 77,4% per entri (target 100% tidak tercapai); alarm palsu 0,1%.</li>
+<li>Nol bypass di template bukan bukti nol mutlak (batas atas CI 0,21%).</li>
+<li>Definisi R01, shift malam, minggu terakhir, 10 menit per error adalah asumsi project.</li>
+<li>Proteksi sheet bukan keamanan penuh; validasi tidak menghalangi salin-tempel; rumus dihitung ulang LibreOffice, bukan Excel.</li>
+<li>Dashboard Excel belum diuji ke pembaca awam; data tidak di-commit (dibuat ulang dari generator).</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (generator, aturan, template): <a href="https://github.com/bagusbernadi/Project-19-Data-Quality-Audit" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-19-One-Pager.pdf">Project-19-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

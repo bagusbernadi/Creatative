@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 17: Supplier Quality Scorecard (simulasi)</title><meta name="description" content="Scorecard kualitas supplier dari data NG per lot (simulasi, dianonimkan): SUP-C tertinggi NG, SUP-A memburuk. SQL window function, Python, Streamlit.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 17: Supplier Quality Scorecard (simulasi)"><meta property="og:description" content="Pada data simulasi, SUP-C punya NG rate tertinggi (3,53%) dan SUP-A memburuk; audit keduanya bisa menghindari sekitar 444 NG per bulan (perkiraan).">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 17: supplier mana yang perlu diaudit? (simulasi)</h1><p><b>Tujuan project:</b> menilai supplier dari data OK/NG per lot: siapa paling sering menyebabkan NG, seberapa konsisten, dan apakah perbedaannya signifikan. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · supplier quality</span><span class="tag">DATA SIMULASI</span><span class="tag">SQL · Python · Streamlit</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Penerimaan lot dan NG material dibangkitkan (100% karangan) lalu dianonimkan (SUP-A sampai SUP-E). Angka menunjukkan metode, bukan supplier nyata.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Supplier mana yang paling sering menyebabkan NG, apakah kualitasnya konsisten antar lot dan waktu, dan apakah perbedaannya signifikan?</dd>
+<dt>Data</dt><dd>Simulasi: 1.200 lot dari 5 supplier, 559.654 unit, Maret sampai Agustus 2026.</dd>
+<dt>Temuan utama</dt><dd>SUP-C punya NG rate tertinggi (3,53%, vs 1,18% pada SUP-E); SUP-A memburuk sejak Juli (1,39% → 3,47%).</dd>
+<dt>Keputusan yang didukung</dt><dd>Audit SUP-C (NG tertinggi) dan SUP-A (memburuk) lebih dulu. Jika SUP-C setara supplier lain, sekitar 444 unit NG per bulan terhindari <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL (CTE, window function), Python (pandas, SciPy, statsmodels), CI Wilson, chi-square, regresi logistik, skor tertimbang dengan uji sensitivitas bobot.</dd>
+<dt>Catatan jujur</dt><dd>Sebagian selisih supplier berasal dari model pemakai (SUP-C lebih banyak dipakai di model M-2); 1 dari 9 status merah tidak didukung uji NG rate yang signifikan; SUP-B bervolume kecil belum dinilai.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · NG rate</span><h3>SUP-C jauh di atas supplier lain</h3><p>3,53% dengan 118.113 unit; perbedaan antar supplier signifikan (chi-square p &lt; 0,001, efek kecil: Cramér's V 0,07).</p></div>
+<div class="card"><span class="q">Temuan 2 · Tren</span><h3>SUP-A memburuk</h3><p>NG rate 3,47% pada periode terkini vs 1,39% sebelumnya (rasio 2,5); supplier lain tidak memburuk.</p></div>
+<div class="card"><span class="q">Temuan 3 · Konsentrasi</span><h3>NG tidak terkumpul di sedikit lot</h3><p>10% lot teratas menyumbang 31%–42% NG per supplier, tidak ada yang melewati 50%.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>SUP-C memiliki NG rate tertinggi, sekitar tiga kali SUP-E</h3><div class="row"><span class="n" style="width:150px">SUP-C (118.113 unit)</span><span class="t"><span class="b" style="width:88.2%;background:#D93025"></span></span><span class="v">3,53%</span></div><div class="row"><span class="n" style="width:150px">SUP-A (111.746 unit)</span><span class="t"><span class="b" style="width:49.1%;background:#1A73E8"></span></span><span class="v">1,96%</span></div><div class="row"><span class="n" style="width:150px">SUP-B (17.712 unit)</span><span class="t"><span class="b" style="width:32.3%;background:#1A73E8"></span></span><span class="v">1,29%</span></div><div class="row"><span class="n" style="width:150px">SUP-D (154.970 unit)</span><span class="t"><span class="b" style="width:31.4%;background:#1A73E8"></span></span><span class="v">1,26%</span></div><div class="row"><span class="n" style="width:150px">SUP-E (157.113 unit)</span><span class="t"><span class="b" style="width:29.5%;background:#1A73E8"></span></span><span class="v">1,18%</span></div><p class="foot">NG rate gabungan Maret–Agustus 2026.</p></div>
+<div class="card fig"><h3>SUP-C stabil tinggi; SUP-A melonjak sejak Juli</h3><svg viewBox="0 0 640 300" role="img" aria-label="NG rate bulanan per supplier" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="570" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="570" y1="215.6" y2="215.6" stroke="#DADCE0"/><text x="42" y="219.6" text-anchor="end" font-size="12" fill="#5F6368">1%</text><line x1="48" x2="570" y1="165.2" y2="165.2" stroke="#DADCE0"/><text x="42" y="169.2" text-anchor="end" font-size="12" fill="#5F6368">2%</text><line x1="48" x2="570" y1="114.8" y2="114.8" stroke="#DADCE0"/><text x="42" y="118.8" text-anchor="end" font-size="12" fill="#5F6368">3%</text><line x1="48" x2="570" y1="64.4" y2="64.4" stroke="#DADCE0"/><text x="42" y="68.4" text-anchor="end" font-size="12" fill="#5F6368">4%</text><line x1="48" x2="570" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">5%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mar</text><text x="152.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Apr</text><text x="256.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mei</text><text x="361.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jun</text><text x="465.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jul</text><text x="570.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Agu</text><polyline points="48.0,183.1 152.4,203.1 256.8,189.3 361.2,207.6 465.6,106.0 570.0,93.7" fill="none" stroke="#E37400" stroke-width="2.4"/><circle cx="48.0" cy="183.1" r="2.8" fill="#E37400"/><circle cx="152.4" cy="203.1" r="2.8" fill="#E37400"/><circle cx="256.8" cy="189.3" r="2.8" fill="#E37400"/><circle cx="361.2" cy="207.6" r="2.8" fill="#E37400"/><circle cx="465.6" cy="106.0" r="2.8" fill="#E37400"/><circle cx="570.0" cy="93.7" r="2.8" fill="#E37400"/><text x="578.0" y="97.7" font-size="13" font-weight="700" fill="#E37400">SUP-A</text><polyline points="48.0,170.1 152.4,219.2 256.8,209.2 361.2,154.6 465.6,217.4 570.0,217.4" fill="none" stroke="#9AA0A6" stroke-width="2.4"/><circle cx="48.0" cy="170.1" r="2.8" fill="#9AA0A6"/><circle cx="152.4" cy="219.2" r="2.8" fill="#9AA0A6"/><circle cx="256.8" cy="209.2" r="2.8" fill="#9AA0A6"/><circle cx="361.2" cy="154.6" r="2.8" fill="#9AA0A6"/><circle cx="465.6" cy="217.4" r="2.8" fill="#9AA0A6"/><circle cx="570.0" cy="217.4" r="2.8" fill="#9AA0A6"/><text x="578.0" y="221.4" font-size="13" font-weight="700" fill="#9AA0A6">SUP-B</text><polyline points="48.0,90.8 152.4,119.8 256.8,87.2 361.2,63.0 465.6,69.8 570.0,93.2" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="48.0" cy="90.8" r="2.8" fill="#D93025"/><circle cx="152.4" cy="119.8" r="2.8" fill="#D93025"/><circle cx="256.8" cy="87.2" r="2.8" fill="#D93025"/><circle cx="361.2" cy="63.0" r="2.8" fill="#D93025"/><circle cx="465.6" cy="69.8" r="2.8" fill="#D93025"/><circle cx="570.0" cy="93.2" r="2.8" fill="#D93025"/><text x="578.0" y="97.2" font-size="13" font-weight="700" fill="#D93025">SUP-C</text><polyline points="48.0,207.3 152.4,194.9 256.8,217.5 361.2,190.7 465.6,193.4 570.0,218.8" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="207.3" r="2.8" fill="#1A73E8"/><circle cx="152.4" cy="194.9" r="2.8" fill="#1A73E8"/><circle cx="256.8" cy="217.5" r="2.8" fill="#1A73E8"/><circle cx="361.2" cy="190.7" r="2.8" fill="#1A73E8"/><circle cx="465.6" cy="193.4" r="2.8" fill="#1A73E8"/><circle cx="570.0" cy="218.8" r="2.8" fill="#1A73E8"/><text x="578.0" y="222.8" font-size="13" font-weight="700" fill="#1A73E8">SUP-D</text><polyline points="48.0,208.5 152.4,196.1 256.8,212.3 361.2,209.0 465.6,202.4 570.0,212.4" fill="none" stroke="#188038" stroke-width="2.4"/><circle cx="48.0" cy="208.5" r="2.8" fill="#188038"/><circle cx="152.4" cy="196.1" r="2.8" fill="#188038"/><circle cx="256.8" cy="212.3" r="2.8" fill="#188038"/><circle cx="361.2" cy="209.0" r="2.8" fill="#188038"/><circle cx="465.6" cy="202.4" r="2.8" fill="#188038"/><circle cx="570.0" cy="212.4" r="2.8" fill="#188038"/><text x="578.0" y="216.4" font-size="13" font-weight="700" fill="#188038">SUP-E</text></svg><p class="foot">NG rate bulanan per supplier; Agustus tidak lengkap (sampai 25 Agustus).</p></div>
+<div class="card fig"><h3>Skor Agustus: SUP-A dan SUP-C merah, SUP-D dan SUP-E hijau</h3><div class="row"><span class="n" style="width:110px">SUP-D</span><span class="t"><span class="b" style="width:83.7%;background:#188038"></span></span><span class="v" style="width:130px">84 (hijau)</span></div><div class="row"><span class="n" style="width:110px">SUP-E</span><span class="t"><span class="b" style="width:80.5%;background:#188038"></span></span><span class="v" style="width:130px">80 (hijau)</span></div><div class="row"><span class="n" style="width:110px">SUP-C</span><span class="t"><span class="b" style="width:50.0%;background:#D93025"></span></span><span class="v" style="width:130px">50 (merah)</span></div><div class="row"><span class="n" style="width:110px">SUP-A</span><span class="t"><span class="b" style="width:33.1%;background:#D93025"></span></span><span class="v" style="width:130px">33 (merah)</span></div><div class="row"><span class="n" style="width:110px">SUP-B</span><span class="t"></span><span class="v" style="width:130px">belum dinilai</span></div><p class="foot">Skor tertimbang (50% NG rate, 25% konsistensi antar lot, 25% tren); hijau ≥ 80, kuning 60–79, merah &lt; 60. SUP-B belum dinilai karena volume kecil.</p></div>
+<div class="card fig"><h3>NG rate SUP-A naik lebih dari dua kali lipat</h3><div class="row"><span class="n" style="width:150px">SUP-A sebelumnya</span><span class="t"><span class="b" style="width:27.8%;background:#1A73E8"></span></span><span class="v">1,39%</span></div><div class="row"><span class="n" style="width:150px">SUP-A terkini</span><span class="t"><span class="b" style="width:69.5%;background:#D93025"></span></span><span class="v">3,47%</span></div><p class="foot">Periode terkini (8 minggu terakhir) vs sebelumnya.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Audit SUP-C dan SUP-A lebih dulu</b>: SUP-C karena NG rate tertinggi, SUP-A karena memburuk.</li>
+<li><b>Telusuri lot yang menyimpang</b> sebelum membahas supplier secara keseluruhan.</li>
+<li><b>Jangan beri status</b> supplier bervolume kecil (SUP-B) sebelum datanya cukup.</li></ul></div>
+<div class="scroll"><table><tr><th>Skenario</th><th>NG terhindari per bulan</th></tr>
+<tr class="sel"><td>SUP-C setara NG rate supplier lain</td><td>sekitar 444 (CI 349–546) <span class="est">perkiraan</span></td></tr>
+<tr><td>SUP-A kembali ke NG rate sebelum memburuk</td><td>sekitar 418 <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: NG terhindari = (NG rate supplier − NG rate gabungan supplier lain) × volume bulanan; bobot skor, ambang lot, dan batas CI adalah asumsi project.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 1.407 dari 1.407 nilai cocok (7 pemeriksaan).</li>
+<li>Cek silang SQL vs Excel (dihitung ulang dengan LibreOffice): 10 dari 10 cocok.</li>
+<li>Pemulihan fakta tertanam: 4 dari 5 sesuai, 1 sebagian.</li>
+<li>Pindai kebocoran identitas asli: semua file hasil dan dokumen lulus (kode pemetaan memang berisi nama asli dan diizinkan).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>: angka bukan supplier atau lini produksi nyata.</li>
+<li>Bobot skor, batas skala, definisi memburuk, dan batas CI adalah asumsi project.</li>
+<li>1 dari 9 status merah tidak didukung uji NG rate yang signifikan (merah karena konsistensi atau tren).</li>
+<li>Aturan cleaning belum teruji pada data kotor (generator tidak menanam baris kotor).</li>
+<li>Dashboard belum di-deploy; keterbacaan oleh orang awam belum diuji.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (generator, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-17-Supplier-Quality-Scorecard" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-17-One-Pager.pdf">Project-17-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

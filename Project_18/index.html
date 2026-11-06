@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 18: Rework Note Analysis (simulasi, tanpa LLM)</title><meta name="description" content="Pareto dan tren catatan rework operator pada data simulasi, plus evaluasi klasifikasi pengganti lokal. SQL, Python. Claude API tidak dipanggil.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 18: Rework Note Analysis (simulasi, tanpa LLM)"><meta property="og:description" content="Pada data simulasi, Perekat kurang / berlebih adalah penyebab terbesar (27,3%), tetapi butuh 5 kategori untuk 80%; klasifikasi LLM tidak diuji.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 18: penyebab rework apa yang paling sering? (simulasi)</h1><p><b>Tujuan project:</b> mengelompokkan catatan rework operator ke kategori penyebab, membuat Pareto dan tren, dan menilai seberapa bisa dipercaya klasifikasi otomatisnya. <b>Data adalah simulasi; LLM tidak dipanggil.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · teks</span><span class="tag">DATA SIMULASI</span><span class="tag">SQL · Python · scikit-learn</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI, TANPA LLM.</b> Catatan rework dibangkitkan dari templat sederhana lalu dianonimkan. Rancangan memakai Claude API, tetapi project ini <u>tidak memanggilnya</u> (tidak ada API key); klasifikasi dijalankan oleh pengganti lokal. Akurasi tinggi di bawah mencerminkan teks sintetis yang mudah, bukan catatan nyata.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Penyebab rework apa yang paling sering muncul di catatan operator, bagaimana trennya per stasiun dan bulan, dan seberapa bisa dipercaya klasifikasi otomatisnya?</dd>
+<dt>Data</dt><dd>Simulasi: 3.060 catatan mentah, 2.724 valid untuk klasifikasi, 5 stasiun, 9 kategori, Maret–Agustus 2026; golden set 269 catatan valid.</dd>
+<dt>Temuan utama</dt><dd>Penyebab terbesar <b>Perekat kurang / berlebih</b> (27,3% catatan). Tiga kategori teratas hanya 64,0%; butuh 5 kategori untuk mencapai 80%, jadi Pareto 80/20 klasik tidak berlaku.</dd>
+<dt>Keputusan yang didukung</dt><dd>Mulai perbaikan dari C4 dan stasiun yang menonjol; jangan fokus hanya pada satu atau dua penyebab. Menurunkan C4 sebesar 20% menghemat sekitar 5,0 jam rework per bulan <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL (view Pareto dan tren), Python (pandas, scikit-learn, SciPy, statsmodels), chi-square dan binomial dengan koreksi Holm, p-chart bulanan, evaluasi klasifikasi (accuracy, macro F1, confusion matrix, kalibrasi).</dd>
+<dt>Catatan jujur</dt><dd>Klasifikasi LLM <b>tidak diuji</b>; pengganti lokal mencapai accuracy 99,3% dan baseline kata kunci 100,0% karena teks sintetis. Hipotesis perbandingan LLM vs baseline belum bisa disimpulkan.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Pareto</span><h3>Penyebab tersebar, bukan dua-tiga saja</h3><p>Dua kategori teratas 49,2%, tiga 64,0%; 80% baru tercapai pada kategori ke-5.</p></div>
+<div class="card"><span class="q">Temuan 2 · Stasiun</span><h3>Empat sel stasiun × kategori menonjol</h3><p>ST-A untuk Goresan, ST-C untuk Perekat, ST-D untuk Gagal uji fungsi, ST-E untuk Posisi tidak sejajar (rasio 1,87–2,41×, p Holm &lt; 0,001).</p></div>
+<div class="card"><span class="q">Temuan 3 · Tren</span><h3>Tidak ada lonjakan bulanan</h3><p>Tidak ada kategori yang melewati batas 3 sigma pada p-chart bulanan; tidak ada efek shift atau model.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Perekat kurang / berlebih terbesar, tetapi butuh 5 kategori untuk 80%</h3><svg viewBox="0 0 640 270" role="img" aria-label="Porsi catatan per kategori (%) dan kumulatif" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="240.0" y2="240.0" stroke="#DADCE0"/><text x="42" y="244.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="620" y1="165.3" y2="165.3" stroke="#DADCE0"/><text x="42" y="169.3" text-anchor="end" font-size="12" fill="#5F6368">10%</text><line x1="48" x2="620" y1="90.7" y2="90.7" stroke="#DADCE0"/><text x="42" y="94.7" text-anchor="end" font-size="12" fill="#5F6368">20%</text><line x1="48" x2="620" y1="16.0" y2="16.0" stroke="#DADCE0"/><text x="42" y="20.0" text-anchor="end" font-size="12" fill="#5F6368">30%</text><rect x="58.2" y="35.8" width="43.2" height="204.2" rx="3" fill="#E37400"/><text x="79.8" y="30.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">27,3</text><text x="79.8" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 79.8 254)">C4</text><rect x="121.7" y="77.2" width="43.2" height="162.8" rx="3" fill="#1A73E8"/><text x="143.3" y="72.2" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">21,8</text><text x="143.3" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 143.3 254)">C5</text><rect x="185.3" y="129.3" width="43.2" height="110.7" rx="3" fill="#1A73E8"/><text x="206.9" y="124.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">14,8</text><text x="206.9" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 206.9 254)">C1</text><rect x="248.8" y="163.8" width="43.2" height="76.2" rx="3" fill="#1A73E8"/><text x="270.4" y="158.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">10,2</text><text x="270.4" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 270.4 254)">C7</text><rect x="312.4" y="167.4" width="43.2" height="72.6" rx="3" fill="#1A73E8"/><text x="334.0" y="162.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">9,7</text><text x="334.0" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 334.0 254)">C2</text><rect x="375.9" y="187.1" width="43.2" height="52.9" rx="3" fill="#1A73E8"/><text x="397.6" y="182.1" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">7,1</text><text x="397.6" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 397.6 254)">C6</text><rect x="439.5" y="206.6" width="43.2" height="33.4" rx="3" fill="#1A73E8"/><text x="461.1" y="201.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">4,5</text><text x="461.1" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 461.1 254)">C3</text><rect x="503.1" y="214.5" width="43.2" height="25.5" rx="3" fill="#1A73E8"/><text x="524.7" y="209.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">3,4</text><text x="524.7" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 524.7 254)">C8</text><rect x="566.6" y="231.8" width="43.2" height="8.2" rx="3" fill="#1A73E8"/><text x="588.2" y="226.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">1,1</text><text x="588.2" y="254" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 588.2 254)">C9</text><polyline points="79.8,178.7 143.3,129.9 206.9,96.7 270.4,73.8 334.0,52.0 397.6,36.1 461.1,26.1 524.7,18.5 588.2,16.0" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="79.8" cy="178.7" r="3" fill="#D93025"/><circle cx="143.3" cy="129.9" r="3" fill="#D93025"/><circle cx="206.9" cy="96.7" r="3" fill="#D93025"/><circle cx="270.4" cy="73.8" r="3" fill="#D93025"/><circle cx="334.0" cy="52.0" r="3" fill="#D93025"/><circle cx="397.6" cy="36.1" r="3" fill="#D93025"/><circle cx="461.1" cy="26.1" r="3" fill="#D93025"/><circle cx="524.7" cy="18.5" r="3" fill="#D93025"/><circle cx="588.2" cy="16.0" r="3" fill="#D93025"/><text x="618" y="8.0" text-anchor="end" font-size="12" font-weight="700" fill="#D93025">100% kumulatif</text></svg><p class="foot">Batang = porsi catatan per kategori; garis = kumulatif. C4 Perekat, C5 Posisi tidak sejajar, C1 Kontaminasi, C7 Gagal uji fungsi, C2 Goresan, C6 Dimensi, C3 Retak, C8 Label, C9 Lainnya.</p></div>
+<div class="card fig"><h3>Empat stasiun menyumbang kategori tertentu dua kali lipat</h3><div class="row"><span class="n" style="width:150px">ST-C · C4</span><span class="t"><span class="b" style="width:62.3%;background:#188038"></span></span><span class="v">1,87×</span></div><div class="row"><span class="n" style="width:150px">ST-E · C5</span><span class="t"><span class="b" style="width:68.7%;background:#188038"></span></span><span class="v">2,06×</span></div><div class="row"><span class="n" style="width:150px">ST-D · C7</span><span class="t"><span class="b" style="width:80.3%;background:#188038"></span></span><span class="v">2,41×</span></div><div class="row"><span class="n" style="width:150px">ST-A · C2</span><span class="t"><span class="b" style="width:64.0%;background:#188038"></span></span><span class="v">1,92×</span></div><p class="foot">Rasio kontribusi stasiun terhadap kategori dibanding stasiun lain.</p></div>
+<div class="card fig"><h3>Porsi tiga kategori teratas stabil sepanjang bulan</h3><svg viewBox="0 0 640 300" role="img" aria-label="Porsi tiga kategori teratas per bulan" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="600" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="600" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">10%</text><line x1="48" x2="600" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">20%</text><line x1="48" x2="600" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">30%</text><line x1="48" x2="600" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">40%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mar</text><text x="158.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Apr</text><text x="268.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Mei</text><text x="379.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jun</text><text x="489.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Jul</text><text x="600.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">Agu</text><polyline points="48.0,75.5 158.4,110.3 268.8,93.0 379.2,88.9 489.6,93.8 600.0,102.1" fill="none" stroke="#E37400" stroke-width="2.4"/><circle cx="48.0" cy="75.5" r="2.8" fill="#E37400"/><circle cx="158.4" cy="110.3" r="2.8" fill="#E37400"/><circle cx="268.8" cy="93.0" r="2.8" fill="#E37400"/><circle cx="379.2" cy="88.9" r="2.8" fill="#E37400"/><circle cx="489.6" cy="93.8" r="2.8" fill="#E37400"/><circle cx="600.0" cy="102.1" r="2.8" fill="#E37400"/><text x="608.0" y="106.1" font-size="13" font-weight="700" fill="#E37400">C4</text><polyline points="48.0,115.8 158.4,147.8 268.8,150.7 379.2,120.8 489.6,120.0 600.0,118.6" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="115.8" r="2.8" fill="#1A73E8"/><circle cx="158.4" cy="147.8" r="2.8" fill="#1A73E8"/><circle cx="268.8" cy="150.7" r="2.8" fill="#1A73E8"/><circle cx="379.2" cy="120.8" r="2.8" fill="#1A73E8"/><circle cx="489.6" cy="120.0" r="2.8" fill="#1A73E8"/><circle cx="600.0" cy="118.6" r="2.8" fill="#1A73E8"/><text x="608.0" y="122.6" font-size="13" font-weight="700" fill="#1A73E8">C5</text><polyline points="48.0,179.8 158.4,159.3 268.8,166.5 379.2,180.8 489.6,162.5 600.0,187.8" fill="none" stroke="#188038" stroke-width="2.4"/><circle cx="48.0" cy="179.8" r="2.8" fill="#188038"/><circle cx="158.4" cy="159.3" r="2.8" fill="#188038"/><circle cx="268.8" cy="166.5" r="2.8" fill="#188038"/><circle cx="379.2" cy="180.8" r="2.8" fill="#188038"/><circle cx="489.6" cy="162.5" r="2.8" fill="#188038"/><circle cx="600.0" cy="187.8" r="2.8" fill="#188038"/><text x="608.0" y="191.8" font-size="13" font-weight="700" fill="#188038">C1</text></svg><p class="foot">Porsi per bulan; tidak ada lonjakan di luar batas 3 sigma.</p></div>
+<div class="card fig"><h3>Klasifikasi hampir sempurna, karena teksnya sintetis</h3><div class="row"><span class="n" style="width:150px">Pengganti lokal (TF-IDF + regresi logistik)</span><span class="t"><span class="b" style="width:99.3%;background:#1A73E8"></span></span><span class="v">99,3%</span></div><div class="row"><span class="n" style="width:150px">Baseline kata kunci</span><span class="t"><span class="b" style="width:100.0%;background:#9AA0A6"></span></span><span class="v">100,0%</span></div><p class="foot">Accuracy pada golden set (269 catatan). Bukan hasil LLM; jangan ekstrapolasi ke catatan nyata.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Mulai dari C4 dan stasiun yang menonjol</b>, jangan fokus pada satu atau dua penyebab saja.</li>
+<li><b>Jalankan klasifikasi dengan LLM</b> pada golden set yang sama sebelum mempercayai hasil LLM.</li>
+<li><b>Tinjau catatan terlalu singkat</b> (8,8% dari catatan, kurang dari 3 kata) agar bisa diklasifikasi.</li></ul></div>
+<div class="scroll"><table><tr><th>Dampak (per bulan)</th><th>Hemat</th></tr>
+<tr class="sel"><td>Menurunkan C4 sebesar 20%</td><td>sekitar 5,0 jam rework <span class="est">perkiraan</span> (rentang 2,5–7,5 menurut 6–18 menit per unit)</td></tr>
+<tr><td>Klasifikasi otomatis</td><td>sekitar 2,8 jam baca <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: satu catatan = satu unit; 12 menit rework per unit; 20 detik baca per catatan; sekitar 499 catatan per bulan.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 397 dari 397 nilai cocok.</li>
+<li>Cek silang SQL vs Excel (dihitung ulang dengan LibreOffice): 9 dari 9 kategori cocok.</li>
+<li>Pemulihan fakta tertanam: 10 dari 10 sesuai.</li>
+<li>Pemanggil API diuji dengan klien palsu: 8 dari 8 lulus (tidak memanggil Claude API sungguhan).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>, teks dari templat sederhana; angka terlalu optimistis dibanding catatan nyata.</li>
+<li><b>Claude API tidak diuji</b>: perbandingan LLM vs baseline, konsistensi dua kali jalan, dan biaya tidak terjawab. Label manual adalah kebenaran generator tanpa noise.</li>
+<li>Hanya 2 kesalahan di golden set, jadi pertanyaan kategori mirip yang tertukar tidak bisa disimpulkan.</li>
+<li>Ambang "sekitar 80%", rasio 1,5, batas 3 sigma, batas 3 kata, menit rework, dan detik baca adalah asumsi project.</li>
+<li>Dashboard belum di-deploy; keterbacaan oleh orang awam belum diuji.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (generator, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-18-Rework-Note-Pareto-Trends" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-18-One-Pager.pdf">Project-18-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>
