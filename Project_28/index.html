@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 28: Predictive Maintenance Failure Analysis (AI4I 2020)</title><meta name="description" content="Analisis kegagalan mesin dan aturan ambang peringatan pada dataset sintetis publik AI4I 2020 (UCI). SQL, Python.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 28: Predictive Maintenance Failure Analysis (AI4I 2020)"><meta property="og:description" content="Pada data sintetis AI4I 2020, failure rate melonjak dari 2,4% ke 15,4% setelah tool wear 200 menit, dan aturan gabungan menangkap 79% kegagalan dengan banyak alarm palsu.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 28: kondisi mesin apa yang paling sering berujung rusak?</h1><p><b>Tujuan project:</b> menemukan kondisi dan jenis kegagalan yang paling sering menyebabkan mesin rusak dan merumuskan aturan ambang sederhana yang terukur ketepatannya. <b>Data publik sintetis (AI4I 2020, UCI).</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Perawatan mesin</span><span class="tag">DATA PUBLIK SINTETIS UCI</span><span class="tag">SQL · Python · DuckDB</span></div></header>
+<div class="note" style="border-left-color:#D97706"><b>DATA SINTETIS PUBLIK.</b> AI4I 2020 dibuat penyusun dataset untuk meniru mesin nyata; pola kegagalannya mengikuti aturan yang ditulis dalam dokumentasi, jadi pola yang "ditemukan" lebih rapi daripada mesin nyata. Semua angka dampak adalah perkiraan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Kondisi operasi dan jenis kegagalan apa yang paling sering menyebabkan mesin rusak, dan pada ambang berapa risikonya naik?</dd>
+<dt>Data</dt><dd>AI4I 2020 Predictive Maintenance (UCI, sintetis, CC BY 4.0): 10.000 run, 14 kolom, 339 run gagal (3,39%).</dd>
+<dt>Temuan utama</dt><dd><b>Failure rate melonjak setelah tool wear sekitar 200 menit</b> (15,4% vs 2,4%). Tipe L paling sering gagal (3,92%, M 2,77%, H 2,09%). Jenis terbanyak HDF, OSF, PWF.</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai aturan gabungan sebagai alarm inspeksi awal (recall 79,4%, precision 26,5% pada data uji), lalu ulangi pemilihan ambang dengan data mesin sendiri.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, pandas, Fisher exact (koreksi Bonferroni), pemilihan ambang pada data latih dan evaluasi pada data uji, pembanding pohon keputusan, cek silang Excel (LibreOffice).</dd>
+<dt>Catatan jujur</dt><dd>Aturan "tanpa peringatan" punya accuracy 96,6% tetapi recall 0%, jadi accuracy menyesatkan. Aturan gabungan banyak alarm palsu (precision 26,5%). Data uji hanya 102 run gagal.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data AI4I 2020</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Tool wear</span><h3>Ambang sekitar 200 menit</h3><p>Failure rate 15,4% pada tool wear ≥ 200 menit vs 2,4% di bawahnya (rasio 6,5; p &lt; 0,001).</p></div>
+<div class="card"><span class="q">Temuan 2 · Aturan</span><h3>Recall tinggi, precision rendah</h3><p>Aturan gabungan menangkap 79,4% kegagalan dengan 10,2% run diberi peringatan; pohon keputusan precision 96,3% tetapi recall 51,0%.</p></div>
+<div class="card"><span class="q">Temuan 3 · Dampak</span><h3>Menguntungkan hanya bila downtime besar</h3><p>Pada downtime 4 jam per kegagalan, bersih sekitar 354 jam per 10.000 run; pada 2 jam, -78 jam (rugi) <span class="est">perkiraan</span>.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Failure rate melonjak tajam setelah tool wear 200 menit</h3><svg viewBox="0 0 640 270" role="img" aria-label="Failure rate per kelompok tool wear (%)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="210.0" y2="210.0" stroke="#DADCE0"/><text x="42" y="214.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="620" y1="154.6" y2="154.6" stroke="#DADCE0"/><text x="42" y="158.6" text-anchor="end" font-size="12" fill="#5F6368">10%</text><line x1="48" x2="620" y1="99.1" y2="99.1" stroke="#DADCE0"/><text x="42" y="103.1" text-anchor="end" font-size="12" fill="#5F6368">20%</text><line x1="48" x2="620" y1="43.7" y2="43.7" stroke="#DADCE0"/><text x="42" y="47.7" text-anchor="end" font-size="12" fill="#5F6368">30%</text><rect x="57.2" y="195.8" width="38.9" height="14.2" rx="3" fill="#1A73E8"/><text x="76.6" y="190.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,6</text><text x="76.6" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 76.6 224)">000-24</text><rect x="114.4" y="199.8" width="38.9" height="10.2" rx="3" fill="#1A73E8"/><text x="133.8" y="194.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">1,8</text><text x="133.8" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 133.8 224)">025-49</text><rect x="171.6" y="197.9" width="38.9" height="12.1" rx="3" fill="#1A73E8"/><text x="191.0" y="192.9" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,2</text><text x="191.0" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 191.0 224)">050-74</text><rect x="228.8" y="197.2" width="38.9" height="12.8" rx="3" fill="#1A73E8"/><text x="248.2" y="192.2" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,3</text><text x="248.2" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 248.2 224)">075-99</text><rect x="286.0" y="197.0" width="38.9" height="13.0" rx="3" fill="#1A73E8"/><text x="305.4" y="192.0" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,3</text><text x="305.4" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 305.4 224)">100-124</text><rect x="343.2" y="197.9" width="38.9" height="12.1" rx="3" fill="#1A73E8"/><text x="362.6" y="192.9" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,2</text><text x="362.6" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 362.6 224)">125-149</text><rect x="400.4" y="197.8" width="38.9" height="12.2" rx="3" fill="#1A73E8"/><text x="419.8" y="192.8" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">2,2</text><text x="419.8" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 419.8 224)">150-174</text><rect x="457.6" y="192.7" width="38.9" height="17.3" rx="3" fill="#1A73E8"/><text x="477.0" y="187.7" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">3,1</text><text x="477.0" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 477.0 224)">175-199</text><rect x="514.8" y="135.3" width="38.9" height="74.7" rx="3" fill="#D93025"/><text x="534.2" y="130.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">13,5</text><text x="534.2" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 534.2 224)">200-224</text><rect x="572.0" y="41.6" width="38.9" height="168.4" rx="3" fill="#D93025"/><text x="591.4" y="36.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">30,4</text><text x="591.4" y="224" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-30 591.4 224)">225-249</text></svg><p class="foot">Failure rate per kelompok tool wear (menit); kelompok dengan n ≥ 50.</p></div>
+<div class="card fig"><h3>Tipe L paling sering gagal, tetapi selisihnya moderat</h3><div class="row"><span class="n" style="width:150px">Tipe L</span><span class="t"><span class="b" style="width:78.3%;background:#E37400"></span></span><span class="v">3,92%</span></div><div class="row"><span class="n" style="width:150px">Tipe M</span><span class="t"><span class="b" style="width:55.4%;background:#1A73E8"></span></span><span class="v">2,77%</span></div><div class="row"><span class="n" style="width:150px">Tipe H</span><span class="t"><span class="b" style="width:41.9%;background:#1A73E8"></span></span><span class="v">2,09%</span></div><p class="foot">Failure rate per tipe produk (L: 6.000 run, M: 2.997, H: 1.003).</p></div>
+<div class="card fig"><h3>Tidak ada aturan yang unggul di precision dan recall sekaligus</h3><div class="row"><span class="n" style="width:150px">Aturan gabungan · recall</span><span class="t"><span class="b" style="width:79.4%;background:#188038"></span></span><span class="v">79,4%</span></div><div class="row"><span class="n" style="width:150px">Aturan gabungan · precision</span><span class="t"><span class="b" style="width:26.5%;background:#E37400"></span></span><span class="v">26,5%</span></div><div class="row"><span class="n" style="width:150px">Pohon keputusan · recall</span><span class="t"><span class="b" style="width:51.0%;background:#E37400"></span></span><span class="v">51,0%</span></div><div class="row"><span class="n" style="width:150px">Pohon keputusan · precision</span><span class="t"><span class="b" style="width:96.3%;background:#188038"></span></span><span class="v">96,3%</span></div><div class="row"><span class="n" style="width:150px">Tanpa peringatan · accuracy</span><span class="t"><span class="b" style="width:96.6%;background:#9AA0A6"></span></span><span class="v">96,6%</span></div><div class="row"><span class="n" style="width:150px">Tanpa peringatan · recall</span><span class="t"><span class="b" style="width:0.0%;background:#D93025"></span></span><span class="v">0,0%</span></div><p class="foot">Data uji. Aturan gabungan: ambang dipilih di data latih dengan batas peringatan 10%.</p></div>
+<div class="card fig"><h3>Tiga jenis kegagalan menyumbang sekitar 87% kejadian</h3><div class="row"><span class="n" style="width:150px">HDF</span><span class="t"><span class="b" style="width:88.5%;background:#1A73E8"></span></span><span class="v">115</span></div><div class="row"><span class="n" style="width:150px">OSF</span><span class="t"><span class="b" style="width:75.4%;background:#1A73E8"></span></span><span class="v">98</span></div><div class="row"><span class="n" style="width:150px">PWF</span><span class="t"><span class="b" style="width:73.1%;background:#1A73E8"></span></span><span class="v">95</span></div><div class="row"><span class="n" style="width:150px">TWF</span><span class="t"><span class="b" style="width:35.4%;background:#1A73E8"></span></span><span class="v">46</span></div><div class="row"><span class="n" style="width:150px">RNF</span><span class="t"><span class="b" style="width:0.8%;background:#1A73E8"></span></span><span class="v">1</span></div><p class="foot">Kejadian per jenis pada run gagal (HDF panas, OSF overstrain, PWF daya, TWF tool wear, RNF acak).</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pakai aturan gabungan</b> sebagai alarm inspeksi awal; ulangi pemilihan ambang dengan data mesin sendiri.</li>
+<li><b>Aturan tool wear saja</b> (≥ 200 menit) hanya menangkap 36,3% kegagalan dengan 678 peringatan palsu per 10.000 run.</li>
+<li><b>Jangan menilai dengan accuracy</b> karena kegagalan jarang; lihat recall dan precision.</li></ul></div>
+<div class="scroll"><table><tr><th>Downtime per kegagalan</th><th>Porsi tercegah</th><th>Downtime bersih per 10.000 run</th></tr>
+<tr><td>2 jam</td><td>50%</td><td>-240 jam <span class="est">perkiraan</span></td></tr><tr><td>2 jam</td><td>80%</td><td>-78 jam <span class="est">perkiraan</span></td></tr><tr><td>2 jam</td><td>100%</td><td>30 jam <span class="est">perkiraan</span></td></tr><tr><td>4 jam</td><td>50%</td><td>30 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>4 jam</td><td>80%</td><td>354 jam <span class="est">perkiraan</span></td></tr><tr><td>4 jam</td><td>100%</td><td>570 jam <span class="est">perkiraan</span></td></tr><tr><td>8 jam</td><td>50%</td><td>570 jam <span class="est">perkiraan</span></td></tr><tr><td>8 jam</td><td>80%</td><td>1.218 jam <span class="est">perkiraan</span></td></tr><tr><td>8 jam</td><td>100%</td><td>1.650 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: 0,5 jam per inspeksi; 750 peringatan palsu per 10.000 run; porsi kegagalan berperingatan yang tercegah adalah asumsi. Data sintetis.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 17 dari 17 lulus; aturan SQL vs Python: 2 dari 2; Excel (LibreOffice): 15 dari 15 lulus.</li>
+<li>Seluruh tabel hasil (CSV) identik pada rerun dari nol.</li>
+<li>Hipotesis: H1–H4 terbukti, H5 sebagian (batas tipe M dan H berbeda dari dokumentasi).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data sintetis</b>; pola lebih rapi dari kondisi nyata. Aturan HDF dan PWF mencapai skor F1 sempurna karena dataset memang dibangkitkan dengan aturan itu.</li>
+<li>Dokumentasi UCI dan data berbeda pada jumlah RNF (5 vs 19 baris, hanya 1 gagal) dan TWF (120 vs 46 baris).</li>
+<li>Kegagalan sangat jarang; data uji hanya 102 run gagal, tipe H sangat sedikit; RNF tidak bisa diprediksi.</li>
+<li>Batas peringatan 10%, tafsir hipotesis, dan asumsi dampak adalah asumsi project. Pola belum tentu penyebab; dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Dataset resmi (UCI): <a href="https://archive.ics.uci.edu/dataset/601" target="_blank" rel="noopener">AI4I 2020 Predictive Maintenance</a> (CC BY 4.0, diakses 24 Oktober 2026; DOI 10.24432/C5HS5C)</li>
+<li>Salinan di DataCenter: <a href="https://github.com/bagusbernadi/DataCenter/tree/main/ai4i-2020-predictive-maintenance" target="_blank" rel="noopener">ai4i-2020-predictive-maintenance</a></li>
+<li>Repository (SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-28-Predictive-Maintenance-Analysis" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-28-One-Pager.pdf">Project-28-One-Pager.pdf</a></li></ul>
+<p class="foot">Sitasi: AI4I 2020 Predictive Maintenance Dataset [Dataset]. (2020). UCI Machine Learning Repository.</p></div>
+
+</main></body></html>

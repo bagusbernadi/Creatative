@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 26: Spec Compliance Extraction (simulasi, tanpa LLM)</title><meta name="description" content="Ekstraksi batas spesifikasi dari PDF datasheet, pencocokan dengan hasil ukur, dan pencarian parameter kritis pada data simulasi. Python, SQL. LLM belum dijalankan.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 26: Spec Compliance Extraction (simulasi, tanpa LLM)"><meta property="og:description" content="Pada data simulasi, aturan ekstraksi dasar hanya 47% akurat, dan revisi spec yang usang menyembunyikan 21% unit yang gagal.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 26: bisakah batas spec di PDF dibaca otomatis dan dicocokkan dengan hasil ukur? (simulasi)</h1><p><b>Tujuan project:</b> membaca batas spesifikasi dari PDF datasheet menjadi tabel, mencocokkannya dengan hasil ukur, dan menemukan parameter yang paling sering gagal. <b>Data adalah simulasi; LLM belum dijalankan.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · ekstraksi dokumen</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · SQL · DuckDB</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI, TANPA LLM.</b> 24 PDF datasheet dan hasil ukur dibangkitkan. Langkah LLM ada di kode tetapi <u>belum dijalankan</u> (tidak ada API key); ekstraksi memakai aturan (regex). Akurasi 100% pada aturan lengkap dihitung pada gold set kecil yang disusun orang yang sama; jangan diekstrapolasi.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bisakah batas spesifikasi di PDF datasheet dibaca otomatis, dicocokkan dengan hasil ukur produksi, dan dipakai mencari parameter yang paling sering gagal atau paling dekat ke batas?</dd>
+<dt>Data</dt><dd>Simulasi: 24 PDF datasheet LED (3 model × 3 revisi, 5 format, 1 hasil scan), 108.540 baris hasil ukur mentah dari 18.000 unit; 2.700 baris (2,49%) kotor, semuanya ditemukan.</dd>
+<dt>Temuan utama</dt><dd>Ekstraksi aturan dasar hanya 46,9%, aturan lengkap 100,0% (gold set 160 field). <b>98,59% unit lolos</b>; <b>cri 12W penyumbang gagal terbesar</b> (93 dari 255 kegagalan, 36%).</dd>
+<dt>Keputusan yang didukung</dt><dd>Nilai hasil uji dengan revisi spec yang berlaku pada tanggal uji; pantau cri 12W lebih dulu. Pengecekan manual sekitar 16 jam per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Ekstraksi PDF (aturan dasar vs lengkap, validasi skema, antrean review), DuckDB + SQL (ASOF join revisi), Wilson CI, chi-square dengan Holm, Cochran-Armitage, cek silang pandas dan Excel (LibreOffice).</dd>
+<dt>Catatan jujur</dt><dd>LLM tidak dijalankan. Gold set kecil dan disusun orang yang sama dengan aturan, jadi 100% optimistis. 1 PDF hasil scan masuk antrean review (tanpa OCR).</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Ekstraksi</span><h3>Aturan dasar gagal di format kalimat</h3><p>Dasar 46,9%: 0% pada format kalimat, 25% pada singkatan, 40% pada tabel terpotong; tabel biasa 100%.</p></div>
+<div class="card"><span class="q">Temuan 2 · Revisi spec</span><h3>Revisi usang menyembunyikan kegagalan</h3><p>Dengan Rev 1.0, 54 dari 254 unit gagal (21,3%) tampak lolos; dengan Rev 2.0 hanya 3.</p></div>
+<div class="card"><span class="q">Temuan 3 · Margin</span><h3>cri 12W paling dekat ke batas</h3><p>12,3% hasil cri 12W lolos dengan margin &lt; 1 simpangan baku. Model berbeda signifikan (Holm) pada cri, power_factor, luminous_flux.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Aturan dasar hanya benar pada tabel; aturan lengkap benar di semua format (gold set)</h3><div class="row"><span class="n" style="width:150px">Kalimat · dasar</span><span class="t"><span class="b" style="width:0.0%;background:#E37400"></span></span><span class="v">0%</span></div><div class="row"><span class="n" style="width:150px">Kalimat · lengkap</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Singkatan · dasar</span><span class="t"><span class="b" style="width:25.0%;background:#E37400"></span></span><span class="v">25%</span></div><div class="row"><span class="n" style="width:150px">Singkatan · lengkap</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Tabel terpotong · dasar</span><span class="t"><span class="b" style="width:40.0%;background:#E37400"></span></span><span class="v">40%</span></div><div class="row"><span class="n" style="width:150px">Tabel terpotong · lengkap</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Tabel · dasar</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Tabel · lengkap</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><p class="foot">Akurasi ekstraksi per format dokumen. Gold set 160 field disusun orang yang sama; optimistis.</p></div>
+<div class="card fig"><h3>cri 12W menyumbang lebih dari sepertiga kegagalan</h3><div class="row"><span class="n" style="width:150px">cri 12W</span><span class="t"><span class="b" style="width:81.0%;background:#E37400"></span></span><span class="v">36,5%</span></div><div class="row"><span class="n" style="width:150px">luminous_flux 9W</span><span class="t"><span class="b" style="width:46.2%;background:#1A73E8"></span></span><span class="v">20,8%</span></div><div class="row"><span class="n" style="width:150px">power_factor 9W</span><span class="t"><span class="b" style="width:33.1%;background:#1A73E8"></span></span><span class="v">14,9%</span></div><div class="row"><span class="n" style="width:150px">luminous_flux 5W</span><span class="t"><span class="b" style="width:17.4%;background:#1A73E8"></span></span><span class="v">7,8%</span></div><div class="row"><span class="n" style="width:150px">cri 9W</span><span class="t"><span class="b" style="width:11.3%;background:#1A73E8"></span></span><span class="v">5,1%</span></div><p class="foot">Porsi tiap parameter × model dari 255 baris gagal.</p></div>
+<div class="card fig"><h3>Spec usang menyembunyikan seperlima unit yang sebenarnya gagal</h3><div class="row"><span class="n" style="width:150px">Rev 1.0 (usang)</span><span class="t"><span class="b" style="width:85.0%;background:#D93025"></span></span><span class="v">21,3%</span></div><div class="row"><span class="n" style="width:150px">Rev 2.0</span><span class="t"><span class="b" style="width:4.7%;background:#188038"></span></span><span class="v">1,2%</span></div><p class="foot">Unit gagal yang tampak lolos bila dinilai dengan revisi tertentu, dari 254 unit yang benar-benar gagal.</p></div>
+<div class="card fig"><h3>Aturan lengkap meloloskan 23 dari 24 dokumen ke validasi skema</h3><div class="row"><span class="n" style="width:150px">Aturan dasar</span><span class="t"><span class="b" style="width:37.5%;background:#E37400"></span></span><span class="v">9 dari 24</span></div><div class="row"><span class="n" style="width:150px">Aturan lengkap</span><span class="t"><span class="b" style="width:95.8%;background:#188038"></span></span><span class="v">23 dari 24</span></div><p class="foot">Dokumen yang lolos validasi skema; satu PDF hasil scan masuk antrean review.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pantau cri 12W lebih dulu</b> dan tampilkan margin di samping pass rate.</li>
+<li><b>Nilai hasil uji dengan revisi spec yang berlaku pada tanggal uji</b> (ASOF join), bukan revisi terbaru atau terlama.</li>
+<li><b>PDF hasil scan:</b> baca manual atau tambahkan OCR; format PDF baru perlu masuk gold set.</li></ul></div>
+<div class="scroll"><table><tr><th>Menit per dokumen (asumsi)</th><th>Jam per tahun</th></tr>
+<tr><td>10 menit</td><td>8 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>20 menit (dasar)</td><td>16 jam <span class="est">perkiraan</span></td></tr><tr><td>30 menit</td><td>24 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: menit per dokumen tidak diukur; 24 dokumen per periode data (sekitar 6 bulan), dikali 2 per tahun.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>SQL vs pandas: 105.939 baris cocok; SQL vs Excel (LibreOffice): 54 dari 54 lulus; SQL vs kunci jawaban simulasi: 0 selisih.</li>
+<li>Fakta tertanam: 5 dari 5 sesuai; baris kotor: semua jenis ditemukan sama dengan yang ditanam.</li>
+<li>Seluruh tabel hasil (CSV) identik pada rerun dari nol.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; <b>LLM belum dijalankan</b> (tidak ada API key), jadi tidak ada perbandingan aturan vs LLM.</li>
+<li>Gold set kecil (160 field) dan disusun orang yang sama dengan aturan; akurasi 100% optimistis.</li>
+<li>Tidak ada lot_id; margin dalam simpangan baku bergantung pada data; menit per dokumen adalah asumsi.</li>
+<li>Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (ekstraksi, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-26-Spec-Compliance-Extraction" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-26-One-Pager.pdf">Project-26-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

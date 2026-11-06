@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 27: Analytics Engineering Mini-Warehouse (simulasi)</title><meta name="description" content="Gudang data mini dengan dbt dan DuckDB dari Excel produksi harian, dengan test kualitas dan KPI yang bisa diaudit, pada data simulasi.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 27: Analytics Engineering Mini-Warehouse (simulasi)"><meta property="og:description" content="Pada data simulasi, Burn-in Test adalah stasiun terburuk (NG rate 3,70%), dan rekap naif dari Excel mentah kehilangan 40% baris.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 27: bisakah Excel produksi harian jadi KPI yang bisa diaudit? (simulasi)</h1><p><b>Tujuan project:</b> membersihkan dan menguji file Excel produksi harian dengan dbt + DuckDB lalu menghitung KPI (FPY, NG rate, RTY, Pareto) yang bisa diaudit. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · data engineering</span><span class="tag">DATA SIMULASI</span><span class="tag">dbt · DuckDB · SQL · Python</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> 150 file Excel produksi harian dibangkitkan dengan format yang berganti dan data kotor yang ditanam. Hasil menguji metode, bukan kondisi pabrik. GitHub Actions harian ditulis tetapi belum terbukti berjalan 7 hari; otomasi diuji lewat simulasi 10 run lokal.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bisakah file Excel produksi harian yang kolomnya sering berganti dibersihkan, diuji, dan dihitung menjadi KPI yang bisa diaudit (FPY, NG rate, RTY, Pareto defect)?</dd>
+<dt>Data</dt><dd>Simulasi: 150 file Excel (3 sheet), 9.060 baris produksi mentah, 4.199.497 unit input pada data bersih, 10 stasiun, 3 model, 2 shift, 2 Maret–25 September 2026.</dd>
+<dt>Temuan utama</dt><dd><b>Burn-in Test paling buruk</b> dengan NG rate 3,70% (stasiun berikutnya 1,35%). RTY lini 90,2%, final yield setelah rework 93,7%.</dd>
+<dt>Keputusan yang didukung</dt><dd>Fokus perbaikan di Burn-in Test; jadikan test dbt gerbang wajib sebelum KPI dipublikasikan. Hemat sekitar 52–104 jam rekap per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>dbt + DuckDB (staging, dimensi, fakta, 60 test), SQL, chi-square, deteksi minggu turun (z robust), cek silang rekap Excel (SUMIFS, LibreOffice), benchmark 1 juta baris.</dd>
+<dt>Catatan jujur</dt><dd>Model berpengaruh signifikan pada NG (p &lt; 0,001) tetapi efeknya sangat kecil (Cramér V 0,010). Tidak ada lot atau serial; nama defect rekaan.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Stasiun</span><h3>Burn-in Test hampir tiga kali stasiun lain</h3><p>NG rate 3,70% vs 1,35% (Photometric Test); 2,5% scrap, jauh di atas lainnya.</p></div>
+<div class="card"><span class="q">Temuan 2 · Tren</span><h3>Satu minggu turun jelas</h3><p>Minggu 2026-06-08: RTY 86,9%; stasiun terburuk S08 (NG rate 4,7%). Shift tidak berpengaruh (p 0,76).</p></div>
+<div class="card"><span class="q">Temuan 3 · Kualitas data</span><h3>Rekap naif memakai 60% baris</h3><p>Rekap langsung dari raw hanya memakai 5.400 dari 9.000 baris (kolom nama baru terlewat) dan membaca 20 stasiun, bukan 10.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Burn-in Test paling banyak NG, hampir tiga kali stasiun kedua</h3><div class="row"><span class="n" style="width:150px">Burn-in Test</span><span class="t"><span class="b" style="width:82.3%;background:#E37400"></span></span><span class="v">3,70%</span></div><div class="row"><span class="n" style="width:150px">Photometric Test</span><span class="t"><span class="b" style="width:30.0%;background:#1A73E8"></span></span><span class="v">1,35%</span></div><div class="row"><span class="n" style="width:150px">LED Soldering</span><span class="t"><span class="b" style="width:21.5%;background:#1A73E8"></span></span><span class="v">0,97%</span></div><div class="row"><span class="n" style="width:150px">Driver Assembly</span><span class="t"><span class="b" style="width:18.0%;background:#1A73E8"></span></span><span class="v">0,81%</span></div><div class="row"><span class="n" style="width:150px">Potting</span><span class="t"><span class="b" style="width:16.2%;background:#1A73E8"></span></span><span class="v">0,73%</span></div><div class="row"><span class="n" style="width:150px">Chip Mounting</span><span class="t"><span class="b" style="width:15.3%;background:#1A73E8"></span></span><span class="v">0,69%</span></div><div class="row"><span class="n" style="width:150px">Housing Assembly</span><span class="t"><span class="b" style="width:15.1%;background:#1A73E8"></span></span><span class="v">0,68%</span></div><div class="row"><span class="n" style="width:150px">Wiring Check</span><span class="t"><span class="b" style="width:12.1%;background:#1A73E8"></span></span><span class="v">0,55%</span></div><div class="row"><span class="n" style="width:150px">Final QC</span><span class="t"><span class="b" style="width:10.5%;background:#1A73E8"></span></span><span class="v">0,47%</span></div><div class="row"><span class="n" style="width:150px">Packing</span><span class="t"><span class="b" style="width:5.6%;background:#1A73E8"></span></span><span class="v">0,25%</span></div><p class="foot">NG rate per stasiun, seluruh periode.</p></div>
+<div class="card fig"><h3>RTY lini turun tajam hanya pada minggu 2026-06-08</h3><svg viewBox="0 0 640 300" role="img" aria-label="RTY lini mingguan (%)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="535" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">85%</text><line x1="48" x2="535" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">87%</text><line x1="48" x2="535" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">89%</text><line x1="48" x2="535" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">91%</text><line x1="48" x2="535" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">93%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">02/03</text><text x="115.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">30/03</text><text x="182.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">27/04</text><text x="249.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">25/05</text><text x="316.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">22/06</text><text x="383.9" y="288" text-anchor="middle" font-size="12" fill="#5F6368">20/07</text><text x="451.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">17/08</text><text x="518.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">14/09</text><line x1="283.1" x2="283.1" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="287.1" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">minggu turun</text><polyline points="48.0,111.5 64.8,93.5 81.6,78.8 98.4,101.3 115.2,110.8 132.0,114.6 148.8,104.0 165.6,96.2 182.3,113.2 199.1,96.5 215.9,81.4 232.7,92.6 249.5,99.4 266.3,96.8 283.1,205.4 299.9,94.2 316.7,114.3 333.5,117.7 350.3,107.9 367.1,100.4 383.9,94.4 400.7,105.3 417.4,106.1 434.2,110.8 451.0,113.0 467.8,93.7 484.6,106.2 501.4,92.7 518.2,100.6 535.0,91.0" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="111.5" r="2.8" fill="#1A73E8"/><circle cx="64.8" cy="93.5" r="2.8" fill="#1A73E8"/><circle cx="81.6" cy="78.8" r="2.8" fill="#1A73E8"/><circle cx="98.4" cy="101.3" r="2.8" fill="#1A73E8"/><circle cx="115.2" cy="110.8" r="2.8" fill="#1A73E8"/><circle cx="132.0" cy="114.6" r="2.8" fill="#1A73E8"/><circle cx="148.8" cy="104.0" r="2.8" fill="#1A73E8"/><circle cx="165.6" cy="96.2" r="2.8" fill="#1A73E8"/><circle cx="182.3" cy="113.2" r="2.8" fill="#1A73E8"/><circle cx="199.1" cy="96.5" r="2.8" fill="#1A73E8"/><circle cx="215.9" cy="81.4" r="2.8" fill="#1A73E8"/><circle cx="232.7" cy="92.6" r="2.8" fill="#1A73E8"/><circle cx="249.5" cy="99.4" r="2.8" fill="#1A73E8"/><circle cx="266.3" cy="96.8" r="2.8" fill="#1A73E8"/><circle cx="283.1" cy="205.4" r="2.8" fill="#1A73E8"/><circle cx="299.9" cy="94.2" r="2.8" fill="#1A73E8"/><circle cx="316.7" cy="114.3" r="2.8" fill="#1A73E8"/><circle cx="333.5" cy="117.7" r="2.8" fill="#1A73E8"/><circle cx="350.3" cy="107.9" r="2.8" fill="#1A73E8"/><circle cx="367.1" cy="100.4" r="2.8" fill="#1A73E8"/><circle cx="383.9" cy="94.4" r="2.8" fill="#1A73E8"/><circle cx="400.7" cy="105.3" r="2.8" fill="#1A73E8"/><circle cx="417.4" cy="106.1" r="2.8" fill="#1A73E8"/><circle cx="434.2" cy="110.8" r="2.8" fill="#1A73E8"/><circle cx="451.0" cy="113.0" r="2.8" fill="#1A73E8"/><circle cx="467.8" cy="93.7" r="2.8" fill="#1A73E8"/><circle cx="484.6" cy="106.2" r="2.8" fill="#1A73E8"/><circle cx="501.4" cy="92.7" r="2.8" fill="#1A73E8"/><circle cx="518.2" cy="100.6" r="2.8" fill="#1A73E8"/><circle cx="535.0" cy="91.0" r="2.8" fill="#1A73E8"/><text x="543.0" y="95.0" font-size="13" font-weight="700" fill="#1A73E8">RTY mingguan</text></svg><p class="foot">RTY lini mingguan (%). Garis vertikal menandai minggu yang terdeteksi turun (z robust).</p></div>
+<div class="card fig"><h3>Rekap naif dari raw kehilangan 40% baris karena nama kolom berganti</h3><div class="row"><span class="n" style="width:150px">Rekap naif dari raw</span><span class="t"><span class="b" style="width:56.8%;background:#D93025"></span></span><span class="v">5.400</span></div><div class="row"><span class="n" style="width:150px">Tabel bersih (mart)</span><span class="t"><span class="b" style="width:94.7%;background:#188038"></span></span><span class="v">9.000</span></div><p class="foot">Baris yang dipakai: rekap langsung dari raw vs tabel bersih.</p></div>
+<div class="card fig"><h3>DuckDB dan Polars jauh lebih cepat dari pandas pada 1 juta baris</h3><div class="row"><span class="n" style="width:150px">Polars</span><span class="t"><span class="b" style="width:19.4%;background:#1A73E8"></span></span><span class="v">0,15 dtk</span></div><div class="row"><span class="n" style="width:150px">DuckDB</span><span class="t"><span class="b" style="width:27.8%;background:#188038"></span></span><span class="v">0,22 dtk</span></div><div class="row"><span class="n" style="width:150px">pandas</span><span class="t"><span class="b" style="width:74.9%;background:#1A73E8"></span></span><span class="v">0,60 dtk</span></div><p class="foot">Waktu median baca + hitung KPI, 3 kali; bergantung mesin.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Fokuskan perbaikan pada Burn-in Test.</b></li>
+<li><b>Jadikan test dbt gerbang wajib</b> sebelum KPI dipublikasikan; perubahan nama kolom harus memicu peringatan, bukan hilang diam-diam.</li>
+<li><b>Standarkan template Excel</b> (kolom terkunci, validasi input) agar data kotor tidak masuk.</li></ul></div>
+<div class="scroll"><table><tr><th>Menit per laporan (asumsi)</th><th>Hemat per tahun</th></tr>
+<tr><td>60 menit</td><td>52 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>90 menit</td><td>78 jam <span class="est">perkiraan</span></td></tr><tr><td>120 menit</td><td>104 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: 52 laporan per tahun; menit per laporan tidak diukur.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Uji dbt: 54 lulus, 6 peringatan (data kotor di raw), 0 error dari 60 test.</li>
+<li>Baris kotor tertangkap uji raw: 300 dari 300 (5 jenis, cocok per file).</li>
+<li>Mart sama dengan rekap Excel SUMIFS (dihitung ulang LibreOffice): 300 dari 300 lulus.</li>
+<li>Bangun ulang dua kali menghasilkan tabel identik (SHA-256): 8 dari 8; dashboard tanpa error: 5 dari 5 pemeriksaan.</li>
+<li>Gerbang publish terbukti menahan hasil saat skema file berubah.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; tidak ada lot atau serial (rework hanya per hari, stasiun, model); nama defect rekaan.</li>
+<li>Jam hemat adalah asumsi; benchmark bergantung mesin dan diulang 3 kali saja.</li>
+<li>GitHub Actions harian ditulis tetapi belum terbukti berjalan 7 hari; otomasi hanya diuji lewat simulasi 10 run lokal.</li>
+<li>Dashboard belum di-deploy; defect dalam satu stasiun terbagi hampir merata, jadi tidak ada defect dominan.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (dbt, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-27-Analytics-Engineering-Mini-Warehouse" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-27-One-Pager.pdf">Project-27-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

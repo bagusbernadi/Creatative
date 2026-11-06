@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 29: Root Cause Analysis Statistics (simulasi)</title><meta name="description" content="Uji statistik penyebab NG per shift, operator, lot, dan supplier pada data inspeksi simulasi, dengan koreksi uji berganda. Python, SQL.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 29: Root Cause Analysis Statistics (simulasi)"><meta property="og:description" content="Pada data simulasi, hanya satu dari 20 operator (OP19) yang terbukti terkait NG setelah koreksi; efek shift ternyata semu dan tidak ada lot terbukti.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 29: faktor mana yang benar-benar terkait NG? (simulasi)</h1><p><b>Tujuan project:</b> menguji apakah perbedaan defect rate antar shift, operator, lot, dan supplier nyata atau acak, agar investigasi fokus pada faktor yang terbukti. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · statistik</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · SciPy · statsmodels · DuckDB</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> 50.000 hasil inspeksi dibangkitkan; faktor yang "ditemukan" adalah faktor yang ditanam sendiri. Uji menunjukkan keterkaitan, bukan sebab.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Apakah perbedaan defect rate antar shift, operator, lot, dan supplier benar-benar signifikan secara statistik, dan faktor mana yang paling kuat terkait NG?</dd>
+<dt>Data</dt><dd>Simulasi: 50.000 unit diinspeksi (±6 bulan), 1.285 NG (2,57%), 3 model, 2 shift, 20 operator, 40 lot dari 3 supplier; 1.250 baris bermasalah (2,5%) semuanya ditemukan.</dd>
+<dt>Temuan utama</dt><dd><b>Hanya OP19 yang terbukti</b> (defect rate 6,2%, odds ratio 2,73, p terkoreksi &lt; 0,001). Selisih shift hilang setelah OP19 dikeluarkan (p 0,46); tidak ada lot terbukti.</dd>
+<dt>Keputusan yang didukung</dt><dd>Beri pelatihan dan pendampingan operator baru; jangan menegur orang atau mengganti supplier dari p-value mentah. Sekitar 220 unit NG per tahun bisa dihindari <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Defect rate + CI Wilson, chi-square atau Fisher exact, koreksi Benjamini-Hochberg dan Bonferroni, odds ratio, regresi logistik, analisis power, DuckDB + SQL, cek silang Excel (LibreOffice).</dd>
+<dt>Catatan jujur</dt><dd>Dua lot yang sengaja ditanam lebih buruk tidak terbukti pada ukuran data ini (power hanya 37%); pertanyaan NG per stasiun tidak terjawab (tidak ada kolom stasiun).</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Operator</span><h3>3 tampak signifikan, hanya 1 bertahan</h3><p>OP19 bertahan setelah koreksi. OP08 tampak buruk sendirian (p 0,018) tetapi tidak setelah koreksi (p terkoreksi 0,18).</p></div>
+<div class="card"><span class="q">Temuan 2 · Shift</span><h3>Efek shift semu</h3><p>Shift 2 tampak lebih tinggi (2,74% vs 2,40%, p 0,015), tetapi tanpa OP19 selisihnya hilang (p 0,46).</p></div>
+<div class="card"><span class="q">Temuan 3 · Lot dan supplier</span><h3>Belum terbukti</h3><p>Tidak ada lot lolos koreksi (p terkoreksi terkecil 0,70); Supplier B p terkoreksi 0,13.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Hanya OP19 yang menonjol; OP08 hanya tampak tinggi tanpa koreksi</h3><div class="row"><span class="n" style="width:150px">OP20 (n=39)</span><span class="t"><span class="b" style="width:109.9%;background:#1A73E8"></span></span><span class="v">7,7%</span></div><div class="row"><span class="n" style="width:150px">OP19</span><span class="t"><span class="b" style="width:88.1%;background:#D93025"></span></span><span class="v">6,2%</span></div><div class="row"><span class="n" style="width:150px">OP08</span><span class="t"><span class="b" style="width:61.6%;background:#E37400"></span></span><span class="v">4,3%</span></div><div class="row"><span class="n" style="width:150px">OP12</span><span class="t"><span class="b" style="width:39.9%;background:#1A73E8"></span></span><span class="v">2,8%</span></div><div class="row"><span class="n" style="width:150px">OP05</span><span class="t"><span class="b" style="width:39.9%;background:#1A73E8"></span></span><span class="v">2,8%</span></div><div class="row"><span class="n" style="width:150px">OP04</span><span class="t"><span class="b" style="width:35.4%;background:#1A73E8"></span></span><span class="v">2,5%</span></div><div class="row"><span class="n" style="width:150px">OP03</span><span class="t"><span class="b" style="width:34.9%;background:#1A73E8"></span></span><span class="v">2,4%</span></div><div class="row"><span class="n" style="width:150px">OP16</span><span class="t"><span class="b" style="width:34.8%;background:#1A73E8"></span></span><span class="v">2,4%</span></div><div class="row"><span class="n" style="width:150px">OP09</span><span class="t"><span class="b" style="width:34.5%;background:#1A73E8"></span></span><span class="v">2,4%</span></div><div class="row"><span class="n" style="width:150px">OP02</span><span class="t"><span class="b" style="width:33.9%;background:#1A73E8"></span></span><span class="v">2,4%</span></div><div class="row"><span class="n" style="width:150px">OP11</span><span class="t"><span class="b" style="width:33.9%;background:#1A73E8"></span></span><span class="v">2,4%</span></div><div class="row"><span class="n" style="width:150px">OP17</span><span class="t"><span class="b" style="width:32.6%;background:#1A73E8"></span></span><span class="v">2,3%</span></div><div class="row"><span class="n" style="width:150px">OP01</span><span class="t"><span class="b" style="width:31.7%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">OP18</span><span class="t"><span class="b" style="width:31.3%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">OP14</span><span class="t"><span class="b" style="width:31.3%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">OP07</span><span class="t"><span class="b" style="width:31.2%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">OP13</span><span class="t"><span class="b" style="width:30.9%;background:#1A73E8"></span></span><span class="v">2,2%</span></div><div class="row"><span class="n" style="width:150px">OP10</span><span class="t"><span class="b" style="width:30.6%;background:#1A73E8"></span></span><span class="v">2,1%</span></div><div class="row"><span class="n" style="width:150px">OP15</span><span class="t"><span class="b" style="width:29.3%;background:#1A73E8"></span></span><span class="v">2,1%</span></div><div class="row"><span class="n" style="width:150px">OP06</span><span class="t"><span class="b" style="width:28.2%;background:#1A73E8"></span></span><span class="v">2,0%</span></div><p class="foot">Defect rate per operator; merah = terbukti setelah koreksi, kuning = tampak tinggi tetapi noise. OP20 hanya 39 unit (uji Fisher, p 0,079), sampel terlalu kecil.</p></div>
+<div class="card fig"><h3>Selisih shift hilang setelah OP19 dikeluarkan</h3><div class="row"><span class="n" style="width:150px">Shift 1</span><span class="t"><span class="b" style="width:74.9%;background:#1A73E8"></span></span><span class="v">2,40%</span></div><div class="row"><span class="n" style="width:150px">Shift 2, semua unit</span><span class="t"><span class="b" style="width:85.7%;background:#E37400"></span></span><span class="v">2,74%</span></div><div class="row"><span class="n" style="width:150px">Shift 2 tanpa OP19</span><span class="t"><span class="b" style="width:71.7%;background:#188038"></span></span><span class="v">2,30%</span></div><p class="foot">Defect rate per shift; OP19 hanya bekerja di Shift 2.</p></div>
+<div class="card fig"><h3>Empat jenis defect menyumbang hampir 90% NG</h3><div class="row"><span class="n" style="width:150px">LED-OPEN</span><span class="t"><span class="b" style="width:77.4%;background:#E37400"></span></span><span class="v">31,0%</span></div><div class="row"><span class="n" style="width:150px">SOLDER</span><span class="t"><span class="b" style="width:60.5%;background:#1A73E8"></span></span><span class="v">24,2%</span></div><div class="row"><span class="n" style="width:150px">DRIVER</span><span class="t"><span class="b" style="width:48.6%;background:#1A73E8"></span></span><span class="v">19,5%</span></div><div class="row"><span class="n" style="width:150px">HOUSING</span><span class="t"><span class="b" style="width:37.0%;background:#1A73E8"></span></span><span class="v">14,8%</span></div><div class="row"><span class="n" style="width:150px">COSMETIC</span><span class="t"><span class="b" style="width:26.5%;background:#1A73E8"></span></span><span class="v">10,6%</span></div><p class="foot">Porsi jenis defect dari semua NG (kumulatif empat teratas 89,4%).</p></div>
+<div class="card fig"><h3>Data terlalu sedikit untuk membuktikan lot yang lebih buruk 1,6 kali</h3><div class="row"><span class="n" style="width:150px">Tanpa koreksi (α 0,05)</span><span class="t"><span class="b" style="width:82.5%;background:#E37400"></span></span><span class="v">83%</span></div><div class="row"><span class="n" style="width:150px">Dengan Bonferroni (α 0,00125)</span><span class="t"><span class="b" style="width:37.0%;background:#D93025"></span></span><span class="v">37%</span></div><p class="foot">Power pada ukuran data saat ini (sekitar 1.152 unit per lot) untuk efek 1,6×; butuh sekitar 2.276 unit per lot dengan koreksi Bonferroni.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Terbukti, tindak lanjuti:</b> pelatihan dan pendampingan operator baru (OP19); efek shift tidak perlu ditindak sendiri.</li>
+<li><b>Noise, hanya dipantau:</b> operator lain (termasuk OP08), shift, dan supplier. Jangan menegur orang atau mengganti supplier dari p-value mentah.</li>
+<li><b>Data belum cukup untuk lot:</b> kumpulkan sekitar 2.276 unit per lot atau gabungkan lot per supplier.</li></ul></div>
+<div class="note"><b>Dampak (perkiraan):</b> membawa OP19 ke baseline menghindari sekitar 110 unit NG per periode data (rentang 86–137), sekitar 220 per tahun (8,6% dari semua NG); periode ±6 bulan diproyeksikan ke 12 bulan.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 75 dari 75 lulus; Python vs Excel (LibreOffice): 65 dari 65 lulus.</li>
+<li>Fakta tertanam: 3 sesuai, 2 sebagian dari 5; baris bermasalah ditemukan sama persis dengan yang ditanam.</li>
+<li>Uji sensitivitas cleaning (data mentah, unit bermasalah dibuang, sesuai log): OP19 selalu odds ratio sekitar 2,7 dan selalu 1 operator signifikan setelah koreksi.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; fakta yang ditemukan adalah fakta yang ditanam sendiri.</li>
+<li>Uji menunjukkan keterkaitan, bukan sebab; faktor yang tidak dicatat (mesin, suhu ruangan) bisa menjadi penyebab sebenarnya.</li>
+<li>Dua lot yang ditanam tidak terbukti (fakta hanya sebagian); pertanyaan NG per stasiun tidak terjawab; hanya satu operator bersampel kecil (OP20).</li>
+<li>Keluarga koreksi, definisi operator baru, dan proyeksi 12 bulan adalah penafsiran project. Hasil per operator dipakai untuk perbaikan proses dan pelatihan, bukan untuk menilai orang. Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (generator, SQL, uji statistik): <a href="https://github.com/bagusbernadi/Project-29-Root-Cause-Analysis-Statistics" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-29-One-Pager.pdf">Project-29-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>
