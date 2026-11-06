@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 10: Cycle Time & Bottleneck Analysis (simulasi)</title><meta name="description" content="Analisis simulasi lini PCBA: bottleneck stasiun, operator menyimpang, dan skenario kenaikan output. SQL, Python.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 10: Cycle Time & Bottleneck Analysis (simulasi)"><meta property="og:description" content="Pada data simulasi, Wave Soldering membatasi lini (484 unit per hari); CT turun 20% menaikkan output sekitar 25% (perkiraan).">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 10: stasiun mana yang membatasi output lini? (simulasi)</h1><p><b>Tujuan project:</b> menemukan stasiun bottleneck lini PCBA, operator yang menyimpang dari standar cycle time, dan estimasi kenaikan output bila bottleneck diperbaiki. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · PCBA</span><span class="tag">DATA SIMULASI</span><span class="tag">SQL · Python</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Output harian dan jam kerja dibangkitkan (seed tetap) dengan fakta yang sengaja ditanam, untuk menunjukkan metode. Angka bukan kondisi pabrik nyata.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Stasiun mana yang membatasi output lini PCBA, operator mana yang menyimpang dari standar cycle time, dan berapa kenaikan output bila bottleneck diperbaiki?</dd>
+<dt>Data</dt><dd>Simulasi: 10 stasiun, 3 model, 40 operator, 60 hari kerja; 468.920 unit OK setelah cleaning.</dd>
+<dt>Temuan utama</dt><dd>Bottleneck lini adalah Wave Soldering: kapasitas 484 unit per hari (2-layer), stasiun kedua Solder Paste Printing (667).</dd>
+<dt>Keputusan yang didukung</dt><dd>Perbaiki Wave Soldering dulu: CT turun 20% menaikkan output lini 25% <span class="est">perkiraan</span>; memperbaiki stasiun lain tidak menaikkan output sama sekali.</dd>
+<dt>Metode</dt><dd>Python + DuckDB SQL, cek silang pandas dan LibreOffice Calc, uji pemulihan fakta tertanam, skenario kapasitas.</dd>
+<dt>Catatan jujur</dt><dd>Data simulasi. Operator Wave Soldering seragam (tercepat hanya 3% di bawah median), jadi masalahnya di stasiun, bukan orang. Pada skenario −30% bottleneck berpindah ke Solder Paste Printing.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Bottleneck</span><h3>Wave Soldering membatasi lini</h3><p>Peringkat 1 pada ketiga model dan kedua shift; kapasitas 484 unit per hari vs 667 di stasiun kedua.</p></div>
+<div class="card"><span class="q">Temuan 2 · Operator</span><h3>Dua operator menyimpang</h3><p>Op_03 di Solder Paste Printing 22% lebih lambat dari median dan tidak membaik setelah 12 minggu; Op_22 di THT Insertion 18% lebih cepat.</p></div>
+<div class="card"><span class="q">Temuan 3 · Dampak</span><h3>Hanya bottleneck yang menaikkan output</h3><p>CT Wave Soldering −20% → +25% output; CT stasiun kedua −30% → 0% <span class="est">perkiraan</span>.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Wave Soldering hanya mampu 484 unit per hari, terendah di lini</h3><div class="row"><span class="n" style="width:150px">Wave Soldering</span><span class="t"><span class="b" style="width:37.2%;background:#E37400"></span></span><span class="v">484</span></div><div class="row"><span class="n" style="width:150px">Solder Paste Print</span><span class="t"><span class="b" style="width:51.3%;background:#1A73E8"></span></span><span class="v">667</span></div><div class="row"><span class="n" style="width:150px">Pick & Place</span><span class="t"><span class="b" style="width:58.7%;background:#1A73E8"></span></span><span class="v">763</span></div><div class="row"><span class="n" style="width:150px">FCT</span><span class="t"><span class="b" style="width:63.1%;background:#1A73E8"></span></span><span class="v">820</span></div><div class="row"><span class="n" style="width:150px">Reflow Soldering</span><span class="t"><span class="b" style="width:63.2%;background:#1A73E8"></span></span><span class="v">821</span></div><div class="row"><span class="n" style="width:150px">THT Insertion</span><span class="t"><span class="b" style="width:67.0%;background:#1A73E8"></span></span><span class="v">872</span></div><div class="row"><span class="n" style="width:150px">SPI</span><span class="t"><span class="b" style="width:73.5%;background:#1A73E8"></span></span><span class="v">956</span></div><div class="row"><span class="n" style="width:150px">ICT</span><span class="t"><span class="b" style="width:74.7%;background:#1A73E8"></span></span><span class="v">971</span></div><div class="row"><span class="n" style="width:150px">AOI</span><span class="t"><span class="b" style="width:77.9%;background:#1A73E8"></span></span><span class="v">1.013</span></div><div class="row"><span class="n" style="width:150px">Packing</span><span class="t"><span class="b" style="width:96.0%;background:#1A73E8"></span></span><span class="v">1.248</span></div><p class="foot">Kapasitas stasiun per hari, model 2-layer (4 operator × 8 jam ÷ CT median).</p></div>
+<div class="card fig"><h3>Memperbaiki bottleneck menaikkan output lini; memperbaiki stasiun lain tidak</h3><svg viewBox="0 0 640 250" role="img" aria-label="Output lini per hari (2-layer), perkiraan" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="206.0" y2="206.0" stroke="#DADCE0"/><text x="42" y="210.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="620" y1="158.5" y2="158.5" stroke="#DADCE0"/><text x="42" y="162.5" text-anchor="end" font-size="12" fill="#5F6368">200</text><line x1="48" x2="620" y1="111.0" y2="111.0" stroke="#DADCE0"/><text x="42" y="115.0" text-anchor="end" font-size="12" fill="#5F6368">400</text><line x1="48" x2="620" y1="63.5" y2="63.5" stroke="#DADCE0"/><text x="42" y="67.5" text-anchor="end" font-size="12" fill="#5F6368">600</text><line x1="48" x2="620" y1="16.0" y2="16.0" stroke="#DADCE0"/><text x="42" y="20.0" text-anchor="end" font-size="12" fill="#5F6368">800</text><rect x="66.3" y="91.1" width="77.8" height="114.9" rx="3" fill="#9AA0A6"/><text x="105.2" y="86.1" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">484</text><text x="105.2" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 105.2 220)">Saat ini</text><rect x="180.7" y="78.4" width="77.8" height="127.6" rx="3" fill="#1A73E8"/><text x="219.6" y="73.4" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">537</text><text x="219.6" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 219.6 220)">Wave −10%</text><rect x="295.1" y="62.5" width="77.8" height="143.5" rx="3" fill="#1A73E8"/><text x="334.0" y="57.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">604</text><text x="334.0" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 334.0 220)">Wave −20%</text><rect x="409.5" y="47.5" width="77.8" height="158.5" rx="3" fill="#1A73E8"/><text x="448.4" y="42.5" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">667</text><text x="448.4" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 448.4 220)">Wave −30%</text><rect x="523.9" y="91.1" width="77.8" height="114.9" rx="3" fill="#D93025"/><text x="562.8" y="86.1" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">484</text><text x="562.8" y="220" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(0 562.8 220)">Stasiun lain −30%</text></svg><p class="foot">Perkiraan dari data simulasi. Pada −30%, bottleneck pindah ke Solder Paste Printing sehingga kenaikan tertahan (38%).</p></div>
+<div class="card fig"><h3>Op_03 tetap sekitar seperlima lebih lambat setelah minggu ke-4</h3><svg viewBox="0 0 640 300" role="img" aria-label="Rasio CT terhadap standar menurut minggu" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">1,00</text><line x1="48" x2="620" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">1,25</text><line x1="48" x2="620" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">1,50</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">1</text><text x="100.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">2</text><text x="152.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">3</text><text x="204.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">4</text><text x="256.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5</text><text x="308.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">6</text><text x="360.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">7</text><text x="412.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">8</text><text x="464.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">9</text><text x="516.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">10</text><text x="568.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">11</text><text x="620.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">12</text><line x1="48" x2="620" y1="266.0" y2="266.0" stroke="#9AA0A6" stroke-dasharray="6 4" stroke-width="1.5"/><text x="626" y="270.0" font-size="12" fill="#9AA0A6" font-weight="700">standar</text><polyline points="48.0,68.9 100.0,110.8 152.0,124.4 204.0,143.0 256.0,145.0 308.0,156.1 360.0,154.6 412.0,151.6 464.0,144.5 516.0,145.5 568.0,141.5 620.0,159.7" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="48.0" cy="68.9" r="2.8" fill="#D93025"/><circle cx="100.0" cy="110.8" r="2.8" fill="#D93025"/><circle cx="152.0" cy="124.4" r="2.8" fill="#D93025"/><circle cx="204.0" cy="143.0" r="2.8" fill="#D93025"/><circle cx="256.0" cy="145.0" r="2.8" fill="#D93025"/><circle cx="308.0" cy="156.1" r="2.8" fill="#D93025"/><circle cx="360.0" cy="154.6" r="2.8" fill="#D93025"/><circle cx="412.0" cy="151.6" r="2.8" fill="#D93025"/><circle cx="464.0" cy="144.5" r="2.8" fill="#D93025"/><circle cx="516.0" cy="145.5" r="2.8" fill="#D93025"/><circle cx="568.0" cy="141.5" r="2.8" fill="#D93025"/><circle cx="620.0" cy="159.7" r="2.8" fill="#D93025"/></svg><p class="foot">Rasio cycle time terhadap standar stasiun (Solder Paste Printing); garis 1,00 = standar.</p></div>
+<div class="card fig"><h3>Board 8-layer lebih lama 17–26% per stasiun</h3><div class="row"><span class="n" style="width:150px">SPI</span><span class="t"><span class="b" style="width:83.8%;background:#1A73E8"></span></span><span class="v">1,26</span></div><div class="row"><span class="n" style="width:150px">THT Insertion</span><span class="t"><span class="b" style="width:83.7%;background:#1A73E8"></span></span><span class="v">1,26</span></div><div class="row"><span class="n" style="width:150px">Pick & Place</span><span class="t"><span class="b" style="width:82.5%;background:#1A73E8"></span></span><span class="v">1,24</span></div><div class="row"><span class="n" style="width:150px">ICT</span><span class="t"><span class="b" style="width:81.4%;background:#1A73E8"></span></span><span class="v">1,22</span></div><div class="row"><span class="n" style="width:150px">Reflow Soldering</span><span class="t"><span class="b" style="width:79.0%;background:#1A73E8"></span></span><span class="v">1,19</span></div><p class="foot">Lima stasiun dengan rasio tertinggi; rasio CT median 8-layer terhadap 2-layer.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Periksa metode dan mesin Wave Soldering</b>; karena operatornya seragam, penyebab kemungkinan ada di stasiun.</li>
+<li><b>Standarkan metode Op_22</b> di THT Insertion dan cek apakah bisa dipakai di stasiun lain.</li>
+<li><b>Cek pelatihan dan alat Op_03</b>; rasionya tidak turun lagi setelah minggu ke-4.</li>
+<li><b>Pantau Solder Paste Printing</b> sebagai bottleneck berikutnya.</li></ul></div>
+<div class="scroll"><table><tr><th>Skenario (2-layer)</th><th>Output lini per hari</th><th>Kenaikan</th></tr>
+<tr><td>Saat ini</td><td>484</td><td>–</td></tr>
+<tr><td>CT Wave Soldering turun 10%</td><td>537 <span class="est">perkiraan</span></td><td>+11%</td></tr><tr class=sel><td>CT Wave Soldering turun 20%</td><td>604 <span class="est">perkiraan</span></td><td>+25%</td></tr><tr><td>CT Wave Soldering turun 30%</td><td>667 <span class="est">perkiraan</span></td><td>+38%</td></tr>
+<tr><td>CT stasiun kedua turun 30%</td><td>484</td><td>0%</td></tr></table></div>
+<div class="note">Asumsi: output lini = kapasitas stasiun terendah; CT berasal dari output harian (ikut menghitung waktu tunggu dan ganti model); skenario dihitung untuk seluruh lini.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Pemulihan fakta tertanam: 10 dari 10 ditemukan (bottleneck, operator, lembur, dan 5 jenis data kotor).</li>
+<li>Cek silang SQL vs pandas: 3 dari 3 pemeriksaan lulus (154 nilai).</li>
+<li>Cek silang SQL vs LibreOffice Calc (dijalankan ulang): 14 dari 14 lulus. File Excel asli belum dicek.</li>
+<li>Cek dashboard vs SQL: 8 dari 8 lulus.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>: hasil menunjukkan metode bekerja, bukan kondisi pabrik.</li>
+<li>Deviasi terukur lebih kecil dari faktor yang ditanam (22% vs 25% dan 18% vs 20%) karena median ikut minggu awal dan hari lembur.</li>
+<li>Pola belum tentu penyebab; perbedaan operator perlu dicek di lapangan.</li>
+<li>Operator dengan kurang dari 5 hari data tidak dibandingkan. Dashboard belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Repository (generator data, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-10-Cycle-Time-Bottleneck-Analysis" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-10-One-Pager.pdf">Project-10-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

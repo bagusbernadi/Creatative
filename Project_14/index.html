@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 14: Social Media Performance Analytics</title><meta name="description" content="Analisis kinerja media sosial: engagement rate Facebook (500 post) dan YouTube (1.867 video, 18.408 komentar). SQL, Python, VADER.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 14: Social Media Performance Analytics"><meta property="og:description" content="Photo punya median ER tertinggi di Facebook (2,45%); jam posting dan sentimen belum meyakinkan sebagai penentu engagement.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 14: konten apa yang paling menarik engagement?</h1><p><b>Tujuan project:</b> menemukan jenis konten, hari, dan jam posting dengan engagement rate tertinggi serta hubungan topik dan sentimen komentar dengan engagement. Analisis SQL + Python.</p><div class="tags"><span class="tag a">Status: analisis selesai, finalisasi belum</span><span class="tag">Media sosial</span><span class="tag">Dataset publik UCI + Kaggle</span><span class="tag">SQL · Python · VADER</span></div></header>
+
+<div class="note"><b>Status: analisis selesai, finalisasi belum.</b> Rekomendasi akhir, label manual 200 komentar, dan notebook belum dikerjakan; hipotesis 5 (kelemahan VADER) belum diuji. Pola ≠ sebab-akibat.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Jenis konten, hari, dan jam posting apa yang menghasilkan engagement rate (ER) tertinggi, dan topik serta sentimen komentar apa yang terkait dengan engagement?</dd>
+<dt>Data</dt><dd>Dua dataset terpisah: 500 post Facebook (2014, satu brand) dan 1.867 video YouTube dengan 18.408 komentar (41 keyword).</dd>
+<dt>Temuan utama</dt><dd>Di Facebook, Photo punya median ER 2,45% vs Status 1,53%, Link 0,68%, Video 0,55% (hanya 7 video). Hipotesis awal (Status dan Video lebih tinggi) <b>tidak didukung</b>.</dd>
+<dt>Keputusan yang didukung</dt><dd>Prioritaskan Photo di Facebook; di YouTube, keyword crypto memimpin ER (8,5%). Jam posting belum bisa dijadikan aturan.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, Python (pandas, SciPy), bootstrap CI, Kruskal-Wallis dengan koreksi Holm, VADER, dashboard Streamlit 4 halaman.</dd>
+<dt>Catatan jujur</dt><dd>Efek jam marginal (p 0,040) dan kelompok sore hanya 8 post. Sentimen VADER tidak terkait ER secara meyakinkan (ρ 0,05, p 0,05), dan sensitif terhadap video viral.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Angka dari dataset UCI dan Kaggle</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Format</span><h3>Photo unggul, Status dan Video di bawahnya</h3><p>Photo lebih tinggi dari Link dan Status (Holm p &lt; 0,001), dan dari Video (p 0,01). Video hanya 7 post, CI lebar.</p></div>
+<div class="card"><span class="q">Temuan 2 · Jam</span><h3>Jam posting belum meyakinkan</h3><p>Malam 20–04 tertinggi (2,46%), tetapi p 0,04 marginal; di luar jam kerja vs jam kerja selisih +0,27 poin, p 0,10 (tidak signifikan).</p></div>
+<div class="card"><span class="q">Temuan 3 · Sentimen</span><h3>VADER cukup mirip label, tidak terkait ER</h3><p>Akurasi VADER 71,6% terhadap label dataset; korelasi dengan ER ρ 0,05 (p 0,05).</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Photo punya engagement rate median tertinggi di Facebook</h3><div class="row"><span class="n" style="width:150px">Photo (n=426)</span><span class="t"><span class="b" style="width:81.7%;background:#188038"></span></span><span class="v">2,45%</span></div><div class="row"><span class="n" style="width:150px">Status (n=45)</span><span class="t"><span class="b" style="width:51.0%;background:#1A73E8"></span></span><span class="v">1,53%</span></div><div class="row"><span class="n" style="width:150px">Link (n=22)</span><span class="t"><span class="b" style="width:22.7%;background:#1A73E8"></span></span><span class="v">0,68%</span></div><div class="row"><span class="n" style="width:150px">Video (n=7)</span><span class="t"><span class="b" style="width:18.2%;background:#1A73E8"></span></span><span class="v">0,55%</span></div><p class="foot">Median ER per tipe post; ER = interaksi ÷ reach; Video hanya 7 post.</p></div>
+<div class="card fig"><h3>Perbedaan jam kecil dan tidak seimbang</h3><div class="row"><span class="n" style="width:150px">Malam 20-04 (n=186)</span><span class="t"><span class="b" style="width:82.0%;background:#1A73E8"></span></span><span class="v">2,46%</span></div><div class="row"><span class="n" style="width:150px">Pagi 05-10 (n=162)</span><span class="t"><span class="b" style="width:70.4%;background:#1A73E8"></span></span><span class="v">2,11%</span></div><div class="row"><span class="n" style="width:150px">Siang 11-15 (n=144)</span><span class="t"><span class="b" style="width:65.4%;background:#1A73E8"></span></span><span class="v">1,96%</span></div><div class="row"><span class="n" style="width:150px">Sore 16-19 (n=8)</span><span class="t"><span class="b" style="width:54.2%;background:#E37400"></span></span><span class="v">1,63%</span></div><p class="foot">Median ER menurut kelompok jam; oranye = kelompok kecil (kurang dari 20 post).</p></div>
+<div class="card fig"><h3>Keyword crypto memimpin ER di YouTube</h3><div class="row"><span class="n" style="width:150px">crypto (n=50)</span><span class="t"><span class="b" style="width:84.7%;background:#188038"></span></span><span class="v">8,5%</span></div><div class="row"><span class="n" style="width:150px">reaction (n=49)</span><span class="t"><span class="b" style="width:64.9%;background:#1A73E8"></span></span><span class="v">6,5%</span></div><div class="row"><span class="n" style="width:150px">asmr (n=49)</span><span class="t"><span class="b" style="width:50.8%;background:#1A73E8"></span></span><span class="v">5,1%</span></div><div class="row"><span class="n" style="width:150px">nintendo (n=48)</span><span class="t"><span class="b" style="width:50.4%;background:#1A73E8"></span></span><span class="v">5,0%</span></div><div class="row"><span class="n" style="width:150px">trolling (n=50)</span><span class="t"><span class="b" style="width:48.3%;background:#1A73E8"></span></span><span class="v">4,8%</span></div><div class="row"><span class="n" style="width:150px">game development (n=50)</span><span class="t"><span class="b" style="width:46.5%;background:#1A73E8"></span></span><span class="v">4,7%</span></div><div class="row"><span class="n" style="width:150px">gaming (n=42)</span><span class="t"><span class="b" style="width:44.9%;background:#1A73E8"></span></span><span class="v">4,5%</span></div><div class="row"><span class="n" style="width:150px">minecraft (n=48)</span><span class="t"><span class="b" style="width:42.5%;background:#1A73E8"></span></span><span class="v">4,2%</span></div><p class="foot">Median ER = (likes + komentar) ÷ views; delapan keyword teratas dari 41.</p></div>
+<div class="card fig"><h3>VADER cocok dengan label dataset, tetapi pembanding LLM berbeda</h3><div class="row"><span class="n" style="width:150px">VADER vs label dataset (18.408 komentar)</span><span class="t"><span class="b" style="width:71.6%;background:#1A73E8"></span></span><span class="v">71,6%</span></div><div class="row"><span class="n" style="width:150px">Label dataset vs pembanding LLM (200)</span><span class="t"><span class="b" style="width:74.5%;background:#9AA0A6"></span></span><span class="v">74,5%</span></div><div class="row"><span class="n" style="width:150px">VADER vs pembanding LLM (200)</span><span class="t"><span class="b" style="width:56.5%;background:#E37400"></span></span><span class="v">56,5%</span></div><p class="foot">Akurasi tiga kelas. Label LLM dibuat asisten AI dan belum diverifikasi manusia; label manual belum ada.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; sangat bergantung pada asumsi</small></h2>
+<div class="card"><ul class="t">
+<li><b>Prioritaskan Photo</b> di Facebook; Link dan Video berkinerja terendah pada data ini.</li>
+<li><b>Jangan menetapkan jam posting</b> dari data ini; efek jam marginal dan kelompok sore hanya 8 post.</li>
+<li><b>Jangan menilai konten dari sentimen VADER</b> sampai label manual tersedia.</li></ul></div>
+<div class="card"><p>Dampak (Facebook): sekitar <b>76 tambahan interaksi per bulan</b> <span class="est">perkiraan</span>; rentang 29 sampai 332 menurut asumsi reach dan ER.</p></div>
+<div class="note">Asumsi: 12 post per bulan (rancangan), reach rata-rata 13.903; selisih ER Photo terhadap rata-rata sangat kecil karena Photo sudah 85% dari semua post. Kode sentimen YouTube diasumsikan (2 positif, 1 netral, 0 negatif).</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 45 dari 45 nilai sama.</li>
+<li>Integritas data: dua file sumber diverifikasi dengan checksum SHA-256 sebelum dipakai.</li>
+<li>Dashboard Streamlit: 3 dari 3 tes otomatis lulus.</li>
+<li>Sensitivitas: keyword teratas tetap crypto tanpa 23 video viral; korelasi sentimen tanpa viral ρ 0,05, p 0,03, jadi kesimpulan sentimen sensitif terhadap data viral.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Data Facebook berasal dari 2014 dan satu brand; korelasi bukan sebab-akibat.</li>
+<li>Kelompok Video (n=7) dan sore (n=8) terlalu kecil untuk kesimpulan kuat.</li>
+<li>Sentimen otomatis tidak sempurna; label manual belum ada; hipotesis 5 belum diuji.</li>
+<li>Kode label sentimen YouTube adalah asumsi. Dashboard belum di-deploy.</li>
+<li>Lisensi: UCI Facebook Metrics CC BY 4.0 (wajib sitasi); YouTube Statistics CC0 menurut label uploader Kaggle.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Dataset resmi (Facebook): <a href="https://archive.ics.uci.edu/dataset/368/facebook+metrics" target="_blank" rel="noopener">UCI Facebook Metrics</a> · folder GitHub: <a href="https://github.com/bagusbernadi/DataCenter/tree/main/uci-facebook-metrics" target="_blank" rel="noopener">uci-facebook-metrics</a></li>
+<li>Dataset resmi (YouTube): <a href="https://www.kaggle.com/datasets/advaypatil/youtube-statistics" target="_blank" rel="noopener">Kaggle YouTube Statistics</a> · folder GitHub: <a href="https://github.com/bagusbernadi/DataCenter/tree/main/youtube-statistics" target="_blank" rel="noopener">youtube-statistics</a></li>
+<li>Repository: <a href="https://github.com/bagusbernadi/Project-14-Social-Media-Performance-Analytics" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-14-One-Pager.pdf">Project-14-One-Pager.pdf</a></li></ul>
+<p class="foot">Sitasi: Moro, S., Rita, P., &amp; Vala, B. (2016). Predicting social media performance metrics. Journal of Business Research. doi:10.1016/j.jbusres.2016.02.010.</p></div>
+
+</main></body></html>
