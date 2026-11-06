@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 34: Customer Behavioral Segmentation (Olist)</title><meta name="description" content="Segmentasi pelanggan e-commerce dengan K-Means dan RFM pada data publik Olist. Python, SQL.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 34: Customer Behavioral Segmentation (Olist)"><meta property="og:description" content="97% pelanggan Olist hanya belanja sekali; dua segmen berisiko memegang 42% revenue.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 34: segmen pelanggan mana yang bernilai atau berisiko pergi?</h1><p><b>Tujuan project:</b> memetakan segmen perilaku belanja dan menentukan tindakan per segmen. <b>Data publik Olist, marketplace Brasil.</b></p><div class="tags"><span class="tag a">Status: selesai di branch build</span><span class="tag">E-commerce · segmentasi</span><span class="tag">Data publik Olist</span><span class="tag">Python · SQL · scikit-learn</span></div></header>
+<div class="note"><b>Data publik Olist (marketplace Brasil, 2016–2018).</b> Lisensi CC BY-NC-SA 4.0: non-komersial, atribusi wajib, dan hasil turunan berlisensi sama. Belum tentu mewakili pasar Indonesia.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Segmen pelanggan apa yang terbentuk dari perilaku belanja nyata, dan segmen mana yang paling bernilai atau berisiko berhenti belanja?</dd>
+<dt>Data</dt><dd>Olist Brazilian E-Commerce (Kaggle, CC BY-NC-SA 4.0): 99.441 order, 9 CSV; dua periode 10 bulan, 93.737 baris pelanggan-periode. Tanpa atribut demografi.</dd>
+<dt>Temuan utama</dt><dd><b>97,0% pelanggan hanya belanja sekali; 20% teratas menyumbang 53,0% revenue.</b> Segmen berisiko (11.750 pelanggan) memegang 42,0% revenue.</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai segmen RFM untuk tindakan (win-back Lapsing high-value; order kedua untuk New high-value). Kenaikan frekuensi 10% pada segmen berisiko bernilai sekitar R$ 526.551 per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL, K-Means (scikit-learn), RFM aturan, bootstrap, uji sensitivitas outlier, uji hipotesis, dashboard Streamlit.</dd>
+<dt>Catatan jujur</dt><dd>Struktur klaster lemah (silhouette 0,32); segmen K-Means hampir seluruhnya mengikuti kategori produk. Stabilitas antar periode di bawah target 70%.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data publik Olist</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Nilai</span><h3>Revenue terkonsentrasi di segmen berisiko</h3><p>Lapsing high-value dan Loyal at risk = 18,4% pelanggan, 42,0% revenue (R$ 4.387.928 per 10 bulan).</p></div>
+<div class="card"><span class="q">Temuan 2 · Metode</span><h3>K-Means dan RFM hampir tidak sepakat</h3><p>Adjusted Rand index 0,011. RFM lebih mudah ditindaklanjuti; K-Means hanya melengkapi rekomendasi kategori.</p></div>
+<div class="card"><span class="q">Temuan 3 · Stabilitas</span><h3>Segmen berubah antar periode</h3><p>Dari 633 pelanggan aktif di dua periode, 33,6% tetap di segmen RFM yang sama.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Dua segmen berisiko memegang sekitar 42% revenue</h3><div class="row"><span class="n" style="width:150px">Lapsing high-value</span><span class="t"><span class="b" style="width:78.2%;background:#D93025"></span></span><span class="v">39,1%</span></div><div class="row"><span class="n" style="width:150px">Hibernating</span><span class="t"><span class="b" style="width:58.0%;background:#1A73E8"></span></span><span class="v">29,0%</span></div><div class="row"><span class="n" style="width:150px">New high-value</span><span class="t"><span class="b" style="width:32.3%;background:#1A73E8"></span></span><span class="v">16,2%</span></div><div class="row"><span class="n" style="width:150px">New regular</span><span class="t"><span class="b" style="width:22.8%;background:#1A73E8"></span></span><span class="v">11,4%</span></div><div class="row"><span class="n" style="width:150px">Loyal at risk</span><span class="t"><span class="b" style="width:5.8%;background:#D93025"></span></span><span class="v">2,9%</span></div><div class="row"><span class="n" style="width:150px">Champions</span><span class="t"><span class="b" style="width:2.9%;background:#1A73E8"></span></span><span class="v">1,5%</span></div><p class="foot">Porsi revenue segmen RFM, periode 2 (merah: segmen berisiko).</p></div>
+<div class="card fig"><h3>Lebih dari separuh pelanggan adalah Hibernating</h3><div class="row"><span class="n" style="width:150px">Hibernating</span><span class="t"><span class="b" style="width:88.6%;background:#1A73E8"></span></span><span class="v">53,2%</span></div><div class="row"><span class="n" style="width:150px">New regular</span><span class="t"><span class="b" style="width:34.9%;background:#1A73E8"></span></span><span class="v">20,9%</span></div><div class="row"><span class="n" style="width:150px">Lapsing high-value</span><span class="t"><span class="b" style="width:28.0%;background:#1A73E8"></span></span><span class="v">16,8%</span></div><div class="row"><span class="n" style="width:150px">New high-value</span><span class="t"><span class="b" style="width:11.3%;background:#1A73E8"></span></span><span class="v">6,8%</span></div><div class="row"><span class="n" style="width:150px">Loyal at risk</span><span class="t"><span class="b" style="width:2.5%;background:#1A73E8"></span></span><span class="v">1,5%</span></div><div class="row"><span class="n" style="width:150px">Champions</span><span class="t"><span class="b" style="width:1.3%;background:#1A73E8"></span></span><span class="v">0,8%</span></div><p class="foot">Porsi pelanggan per segmen RFM, periode 2.</p></div>
+<div class="card fig"><h3>Silhouette tertinggi di k = 7, tetapi struktur klaster tetap lemah</h3><svg viewBox="0 0 640 300" role="img" aria-label="Silhouette per jumlah klaster (k)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="540" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0,00</text><line x1="48" x2="540" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">0,10</text><line x1="48" x2="540" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">0,20</text><line x1="48" x2="540" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">0,30</text><line x1="48" x2="540" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">0,40</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">2</text><text x="109.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">3</text><text x="171.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">4</text><text x="232.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5</text><text x="294.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">6</text><text x="355.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">7</text><text x="417.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">8</text><text x="478.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">9</text><text x="540.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">10</text><polyline points="48.0,153.9 109.5,137.1 171.0,109.9 232.5,90.7 294.0,61.4 355.5,41.0 417.0,82.3 478.5,82.9 540.0,70.4" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="153.9" r="2.8" fill="#1A73E8"/><circle cx="109.5" cy="137.1" r="2.8" fill="#1A73E8"/><circle cx="171.0" cy="109.9" r="2.8" fill="#1A73E8"/><circle cx="232.5" cy="90.7" r="2.8" fill="#1A73E8"/><circle cx="294.0" cy="61.4" r="2.8" fill="#1A73E8"/><circle cx="355.5" cy="41.0" r="2.8" fill="#1A73E8"/><circle cx="417.0" cy="82.3" r="2.8" fill="#1A73E8"/><circle cx="478.5" cy="82.9" r="2.8" fill="#1A73E8"/><circle cx="540.0" cy="70.4" r="2.8" fill="#1A73E8"/><text x="548.0" y="74.4" font-size="13" font-weight="700" fill="#1A73E8">Silhouette</text></svg><p class="foot">k = 6 dipilih (silhouette 0,325) agar sesuai rentang 4–6 segmen yang dirancang dan mudah dibaca; k = 7 sedikit lebih tinggi (0,357).</p></div>
+<div class="card fig"><h3>Stabilitas segmen antar periode di bawah target 70%</h3><div class="row"><span class="n" style="width:150px">K-Means: segmen sama</span><span class="t"><span class="b" style="width:58.1%;background:#E37400"></span></span><span class="v">46%</span></div><div class="row"><span class="n" style="width:150px">RFM: segmen sama</span><span class="t"><span class="b" style="width:42.1%;background:#E37400"></span></span><span class="v">34%</span></div><div class="row"><span class="n" style="width:150px">Target stabilitas</span><span class="t"><span class="b" style="width:87.5%;background:#9AA0A6"></span></span><span class="v">70%</span></div><p class="foot">Pelanggan yang tetap di segmen sama pada kedua periode (633 pelanggan; hanya 2,1% dari periode 1).</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak</h2>
+<div class="card"><ul class="t"><li>Kampanye win-back untuk Lapsing high-value (nilai order besar, sekali belanja).</li><li>Dorong order kedua untuk pembeli baru bernilai besar (New high-value).</li><li>Segmen K-Means hanya untuk rekomendasi kategori.</li></ul>
+<p>Kenaikan frekuensi 10% pada dua segmen berisiko: sekitar R$ 526.551 per tahun <span class="est">perkiraan</span> (asumsi skenario, bukan hasil uji coba).</p></div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 22 dari 22 lulus.</li>
+<li>Hipotesis: 4 terbukti, 1 sebagian, 0 tidak terbukti.</li>
+<li>Bootstrap: ARI 0,80–0,96 terhadap acuan; membuang 1% pelanggan bernilai ekstrem mengubah segmen RFM hanya 0,7%.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Marketplace Brasil 2016–2018; belum tentu mewakili pasar Indonesia.</li>
+<li>Hampir semua pelanggan sekali belanja, sehingga frekuensi kurang membedakan segmen dan stabilitas hanya diuji pada pelanggan berulang yang sedikit.</li>
+<li>Struktur K-Means lemah dan didominasi fitur kategori. Segmen menggambarkan pola belanja, bukan penyebab.</li>
+<li>Dashboard belum di-deploy; repo lama belum diaudit.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sumber resmi: <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener">Kaggle, olistbr/brazilian-ecommerce</a> (Versi 2, akses 28 Okt 2026; CC BY-NC-SA 4.0)</li>
+<li>Arsip data (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/olist-brazilian-ecommerce" target="_blank" rel="noopener">olist-brazilian-ecommerce</a></li>
+<li>Repository: <a href="https://github.com/bagusbernadi/Project-34-Customer-Behavioral-Segmentation" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-34-One-Pager.pdf">Project-34-One-Pager.pdf</a></li></ul>
+<p class="foot">Atribusi: Olist, Francisco Magioli, Leo Dabague, dan Andre Sionek, "Brazilian E-Commerce Public Dataset by Olist" (Kaggle).</p></div>
+
+</main></body></html>

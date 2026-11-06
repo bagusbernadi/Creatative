@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 30: Production Data Entry App + Dashboard (simulasi)</title><meta name="description" content="Aplikasi input produksi tervalidasi dengan dashboard yield dan NG, pada data simulasi. Python, Streamlit, SQL.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 30: Production Data Entry App + Dashboard (simulasi)"><meta property="og:description" content="Pada data simulasi, aplikasi input tervalidasi menyimpan 0 baris yang melanggar aturan dibanding 24,9 per 1.000 di Excel lama.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 30: bisakah aplikasi input menggantikan Excel produksi manual? (simulasi)</h1><p><b>Tujuan project:</b> mengganti pencatatan Excel manual dengan aplikasi input tervalidasi yang langsung menampilkan yield dan NG rate per stasiun, model, dan supplier. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (belum di-deploy)</span><span class="tag">Manufaktur · aplikasi data</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · Streamlit · SQL</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Excel lama dan data aplikasi dibangkitkan (30.000 tray, 10 stasiun) meniru tabel production_data. Dashboard belum di-deploy dan tidak ada link demo; audit repositori lama dan pembersihan kredensial di riwayat commit lama belum dikerjakan.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana mengganti pencatatan Excel manual dengan aplikasi input yang tervalidasi dan langsung menampilkan yield dan NG rate per stasiun, model, dan supplier?</dd>
+<dt>Data</dt><dd>Simulasi: Excel lama 30.125 baris (750 bermasalah, 2,5%), data aplikasi 30.000 tray, 1.453.218 unit, 10 stasiun, 4 supplier.</dd>
+<dt>Temuan utama</dt><dd>Validasi menangkap 750 dari 750 error Excel lama; aplikasi menyimpan <b>0 baris yang melanggar aturan</b> dan mencegat 14,8 isian salah per 1.000. <b>Reflow Soldering</b> stasiun terburuk (NG rate 4,06%).</dd>
+<dt>Keputusan yang didukung</dt><dd>Fokus perbaikan di Reflow Soldering dan Functional Test; periksa Supplier C di Functional Test; beri pendampingan 2 minggu untuk operator baru. Hemat sekitar 62,4–78,0 jam rekap per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Aplikasi Streamlit + SQLite/PostgreSQL dengan aturan validasi, view KPI yang sama untuk semua halaman, pytest, cek silang pandas dan Excel (LibreOffice), pemindaian kredensial (gitleaks).</dd>
+<dt>Catatan jujur</dt><dd>Validasi tidak menangkap angka yang keliru tetapi masuk akal (3,0 per 1.000 tray masih dikoreksi lewat fitur edit). Analisis deskriptif; uji statistik formal ada di Project 29.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Stasiun</span><h3>Dua stasiun menyumbang 43% NG</h3><p>Reflow Soldering 4,06% dan Functional Test 2,45% = 42,8% dari semua NG.</p></div>
+<div class="card"><span class="q">Temuan 2 · Supplier</span><h3>Supplier C bermasalah di satu tempat</h3><p>Di Functional Test NG rate 3,98%, 2,07× supplier lain, di 20 dari 20 batch; peringkat total menyesatkan.</p></div>
+<div class="card"><span class="q">Temuan 3 · Operator baru</span><h3>OP16 tinggi dua minggu pertama</h3><p>2,19% NG (1,70× operator lama), lalu 1,31% setelah itu.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Reflow Soldering NG rate tertinggi, jauh di atas stasiun lain</h3><div class="row"><span class="n" style="width:150px">Reflow Soldering</span><span class="t"><span class="b" style="width:84.6%;background:#E37400"></span></span><span class="v">4,06%</span></div><div class="row"><span class="n" style="width:150px">Functional Test</span><span class="t"><span class="b" style="width:51.0%;background:#1A73E8"></span></span><span class="v">2,45%</span></div><div class="row"><span class="n" style="width:150px">Housing Assembly</span><span class="t"><span class="b" style="width:32.1%;background:#1A73E8"></span></span><span class="v">1,54%</span></div><div class="row"><span class="n" style="width:150px">Component Placement</span><span class="t"><span class="b" style="width:28.0%;background:#1A73E8"></span></span><span class="v">1,34%</span></div><div class="row"><span class="n" style="width:150px">Board Test (ICT)</span><span class="t"><span class="b" style="width:28.0%;background:#1A73E8"></span></span><span class="v">1,34%</span></div><div class="row"><span class="n" style="width:150px">Final Inspection</span><span class="t"><span class="b" style="width:24.4%;background:#1A73E8"></span></span><span class="v">1,17%</span></div><div class="row"><span class="n" style="width:150px">Solder Paste Printing</span><span class="t"><span class="b" style="width:24.2%;background:#1A73E8"></span></span><span class="v">1,16%</span></div><div class="row"><span class="n" style="width:150px">Screen Assembly</span><span class="t"><span class="b" style="width:21.5%;background:#1A73E8"></span></span><span class="v">1,03%</span></div><div class="row"><span class="n" style="width:150px">AOI Inspection</span><span class="t"><span class="b" style="width:16.6%;background:#1A73E8"></span></span><span class="v">0,80%</span></div><div class="row"><span class="n" style="width:150px">Packaging</span><span class="t"><span class="b" style="width:6.0%;background:#1A73E8"></span></span><span class="v">0,29%</span></div><p class="foot">NG rate per stasiun, seluruh periode.</p></div>
+<div class="card fig"><h3>Supplier C di Functional Test dua kali lipat supplier lain</h3><div class="row"><span class="n" style="width:150px">Supplier C · Functional Test</span><span class="t"><span class="b" style="width:86.1%;background:#D93025"></span></span><span class="v">2,07×</span></div><div class="row"><span class="n" style="width:150px">Supplier C · Final Inspection</span><span class="t"><span class="b" style="width:47.4%;background:#1A73E8"></span></span><span class="v">1,14×</span></div><div class="row"><span class="n" style="width:150px">Supplier B · Reflow Soldering</span><span class="t"><span class="b" style="width:45.9%;background:#1A73E8"></span></span><span class="v">1,10×</span></div><div class="row"><span class="n" style="width:150px">Supplier B · AOI Inspection</span><span class="t"><span class="b" style="width:45.2%;background:#1A73E8"></span></span><span class="v">1,08×</span></div><div class="row"><span class="n" style="width:150px">Supplier D · Board Test (ICT)</span><span class="t"><span class="b" style="width:45.1%;background:#1A73E8"></span></span><span class="v">1,08×</span></div><div class="row"><span class="n" style="width:150px">Supplier B · Packaging</span><span class="t"><span class="b" style="width:45.0%;background:#1A73E8"></span></span><span class="v">1,08×</span></div><p class="foot">Rasio NG rate pasangan supplier-stasiun terhadap supplier lain (enam teratas).</p></div>
+<div class="card fig"><h3>NG operator baru tinggi di minggu pertama lalu turun ke normal</h3><svg viewBox="0 0 640 300" role="img" aria-label="NG rate OP16 per minggu (%)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="520" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0,0%</text><line x1="48" x2="520" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">0,8%</text><line x1="48" x2="520" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">1,6%</text><line x1="48" x2="520" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">2,4%</text><line x1="48" x2="520" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">3,2%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M1</text><text x="95.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M2</text><text x="142.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M3</text><text x="189.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M4</text><text x="236.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M5</text><text x="284.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M6</text><text x="331.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M7</text><text x="378.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M8</text><text x="425.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M9</text><text x="472.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M10</text><text x="520.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">M11</text><polyline points="48.0,45.3 95.2,141.1 142.4,162.0 189.6,156.5 236.8,176.1 284.0,176.6 331.2,153.5 378.4,157.3 425.6,166.0 472.8,158.8 520.0,157.5" fill="none" stroke="#E37400" stroke-width="2.4"/><circle cx="48.0" cy="45.3" r="2.8" fill="#E37400"/><circle cx="95.2" cy="141.1" r="2.8" fill="#E37400"/><circle cx="142.4" cy="162.0" r="2.8" fill="#E37400"/><circle cx="189.6" cy="156.5" r="2.8" fill="#E37400"/><circle cx="236.8" cy="176.1" r="2.8" fill="#E37400"/><circle cx="284.0" cy="176.6" r="2.8" fill="#E37400"/><circle cx="331.2" cy="153.5" r="2.8" fill="#E37400"/><circle cx="378.4" cy="157.3" r="2.8" fill="#E37400"/><circle cx="425.6" cy="166.0" r="2.8" fill="#E37400"/><circle cx="472.8" cy="158.8" r="2.8" fill="#E37400"/><circle cx="520.0" cy="157.5" r="2.8" fill="#E37400"/><text x="528.0" y="161.5" font-size="13" font-weight="700" fill="#E37400">NG rate OP16</text></svg><p class="foot">NG rate OP16 per minggu. Hasil per operator dipakai untuk pelatihan, bukan menilai orang.</p></div>
+<div class="card fig"><h3>Aplikasi menyimpan nol baris yang melanggar aturan</h3><div class="row"><span class="n" style="width:150px">Excel lama: baris salah tersimpan</span><span class="t"><span class="b" style="width:83.0%;background:#D93025"></span></span><span class="v">24,9</span></div><div class="row"><span class="n" style="width:150px">Aplikasi: isian salah dicegat</span><span class="t"><span class="b" style="width:49.3%;background:#E37400"></span></span><span class="v">14,8</span></div><div class="row"><span class="n" style="width:150px">Aplikasi: koreksi lewat edit</span><span class="t"><span class="b" style="width:10.0%;background:#1A73E8"></span></span><span class="v">3,0</span></div><div class="row"><span class="n" style="width:150px">Aplikasi: baris melanggar aturan tersimpan</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0,0</span></div><p class="foot">Per 1.000 entri. Excel lama: 750 dari 30.125 baris salah masuk; aplikasi: 450 isian salah dicegat sebelum tersimpan.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Fokuskan perbaikan proses</b> di Reflow Soldering dan Functional Test.</li>
+<li><b>Periksa supplier modul</b> di Functional Test (Supplier C).</li>
+<li><b>Masa pendampingan 2 minggu</b> untuk operator baru; pakai aplikasi di semua stasiun dan tinjau isian yang ditolak per aturan.</li></ul></div>
+<div class="scroll"><table><tr><th>Porsi rekap lewat aplikasi</th><th>Hemat per tahun</th></tr>
+<tr><td>50%</td><td>39,0 jam <span class="est">perkiraan</span></td></tr>
+<tr class="sel"><td>80% (dasar)</td><td>62,4 jam <span class="est">perkiraan</span></td></tr>
+<tr><td>100%</td><td>78,0 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: 52 rekap per tahun, 90 menit per rekap. Bila NG Reflow Soldering turun 20%, sekitar 341 unit per bulan terselamatkan <span class="est">perkiraan</span>.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Tes aplikasi: 284 dari 284 lulus (SQLite dan PostgreSQL 16, masing-masing 142).</li>
+<li>Cek silang view SQL vs pandas: 4.678 dari 4.678 pemeriksaan; vs Excel (LibreOffice): 17 dari 17 cocok.</li>
+<li>Fakta tertanam: 5 dari 5 sesuai; enam jenis error Excel lama tertangkap tepat oleh aturannya (750 dari 750).</li>
+<li>Pemindaian kredensial: 0 kebocoran di file dan 0 di riwayat git; token canary terdeteksi (scanner berfungsi).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; pola belum tentu penyebab. Validasi tidak menangkap angka keliru yang masuk akal.</li>
+<li>Dashboard belum di-deploy (tidak ada link demo); belum diuji ke pembaca awam.</li>
+<li>Workflow GitHub Actions ditulis tetapi belum pernah berjalan di GitHub; padanannya dijalankan lokal. Dockerfile belum diuji build.</li>
+<li>Audit kode repositori lama dan pembersihan kredensial di riwayat commit lama belum dikerjakan (langkah untuk pemilik ada di docs/security_cleanup.md).</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (aplikasi, validasi, dashboard): <a href="https://github.com/bagusbernadi/Project-30-Production-Data-Entry-App" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-30-One-Pager.pdf">Project-30-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

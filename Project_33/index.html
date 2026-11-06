@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 33: Automated ETL, Excel Log ke SQL (simulasi)</title><meta name="description" content="ETL otomatis dari log Excel operator yang berantakan ke database SQL, pada data simulasi. Python, DuckDB.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 33: Automated ETL, Excel Log ke SQL (simulasi)"><meta property="og:description" content="ETL memuat 6.960 dari 7.260 baris, mengarantina 4,1%, dan menangani 420 dari 420 masalah tertanam.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 33: bisakah log Excel berantakan diubah otomatis jadi database bersih? (simulasi)</h1><p><b>Tujuan project:</b> membangun ETL yang membaca log Excel operator, memvalidasi, mengarantina baris bermasalah, dan memuat sisanya ke SQL. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai di branch build</span><span class="tag">Manufaktur · ETL</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · SQL</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Log Excel dibangkitkan (60 file, 7.260 baris) dengan 420 masalah yang sengaja ditanam; hasil membuktikan metode, bukan kondisi pabrik. Menit per langkah sebelum ETL adalah asumsi, bukan pengukuran.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana mengubah log Excel operator yang berantakan menjadi data siap analisis, berapa baris yang bermasalah, dan berapa jam kerja yang bisa dihemat?</dd>
+<dt>Data</dt><dd>Simulasi: 60 file Excel, 3 versi template, 10 stasiun, 3 model, Mar–Agu 2026; 7.260 baris data.</dd>
+<dt>Temuan utama</dt><dd>ETL memuat 6.960 baris dan mengarantina 300 (4,1%) dalam 1,3 detik. <b>420 dari 420 masalah tertanam ditangani benar.</b> Run kedua memuat 0 baris baru.</dd>
+<dt>Keputusan yang didukung</dt><dd>Jadikan ETL jalur standar log Excel: baris bermasalah dikarantina dan dikoreksi manusia. Menyusun laporan turun dari 170 ke sekitar 8 menit; pada 8 laporan per bulan sekitar 259 jam per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Python (pandas, openpyxl) dengan pemetaan kolom YAML, DuckDB + SQL (staging, karantina, view), pytest, cek silang pandas dan Excel (LibreOffice), dashboard Streamlit.</dd>
+<dt>Catatan jujur</dt><dd>4 dari 5 fakta yang direncanakan hanya sebagian terwujud di data simulasi (mis. tidak ada angka serial Excel). Tidak ada baris data hilang, tetapi data adalah simulasi.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Kualitas</span><h3>4,1% baris dikarantina</h3><p>300 dari 7.260 baris; terbanyak OK + NG tidak sama dengan input (180 baris).</p></div>
+<div class="card"><span class="q">Temuan 2 · Ketepatan</span><h3>Semua masalah tertanam tertangani</h3><p>420 dari 420; 6.780 dari 6.780 baris tanpa masalah dimuat persis sama dengan data asal.</p></div>
+<div class="card"><span class="q">Temuan 3 · Waktu</span><h3>Waktu laporan turun jauh</h3><p>170 menit (asumsi) menjadi 8,0 menit; waktu tunggu 24 jam menjadi sekitar 15 menit (asumsi).</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Pelanggaran terbesar: OK + NG tidak sama dengan input</h3><div class="row"><span class="n" style="width:150px">OK + NG tidak sama dengan input</span><span class="t"><span class="b" style="width:90.0%;background:#E37400"></span></span><span class="v">180</span></div><div class="row"><span class="n" style="width:150px">Kolom wajib kosong atau tidak terbaca</span><span class="t"><span class="b" style="width:30.0%;background:#E37400"></span></span><span class="v">60</span></div><div class="row"><span class="n" style="width:150px">Jumlah negatif</span><span class="t"><span class="b" style="width:30.0%;background:#E37400"></span></span><span class="v">60</span></div><div class="row"><span class="n" style="width:150px">Baris ganda (kunci tanggal, stasiun, model, shift)</span><span class="t"><span class="b" style="width:30.0%;background:#E37400"></span></span><span class="v">60</span></div><div class="row"><span class="n" style="width:150px">Penulisan model tidak seragam</span><span class="t"><span class="b" style="width:30.0%;background:#1A73E8"></span></span><span class="v">60</span></div><div class="row"><span class="n" style="width:150px">Angka bersatuan teks (mis. 480 pcs)</span><span class="t"><span class="b" style="width:30.0%;background:#1A73E8"></span></span><span class="v">60</span></div><p class="foot">Baris per jenis masalah (jingga: dikarantina; biru: diperbaiki lalu dimuat).</p></div>
+<div class="card fig"><h3>Merapikan format dan menyalin data paling banyak memakan waktu</h3><div class="row"><span class="n" style="width:150px">Salin dan gabung</span><span class="t"><span class="b" style="width:88.9%;background:#1A73E8"></span></span><span class="v">40 mnt</span></div><div class="row"><span class="n" style="width:150px">Rapikan format</span><span class="t"><span class="b" style="width:77.8%;background:#1A73E8"></span></span><span class="v">35 mnt</span></div><div class="row"><span class="n" style="width:150px">Cek salah ketik</span><span class="t"><span class="b" style="width:55.6%;background:#1A73E8"></span></span><span class="v">25 mnt</span></div><div class="row"><span class="n" style="width:150px">Kumpulkan file</span><span class="t"><span class="b" style="width:53.3%;background:#1A73E8"></span></span><span class="v">24 mnt</span></div><div class="row"><span class="n" style="width:150px">Hitung KPI</span><span class="t"><span class="b" style="width:44.4%;background:#1A73E8"></span></span><span class="v">20 mnt</span></div><div class="row"><span class="n" style="width:150px">Buat grafik</span><span class="t"><span class="b" style="width:40.0%;background:#1A73E8"></span></span><span class="v">18 mnt</span></div><p class="foot">Menit dihemat per laporan menurut langkah. Menit manual adalah asumsi penyusun.</p></div>
+<div class="card fig"><h3>Pada 8 laporan per bulan, sekitar 259 jam dihemat per tahun</h3><svg viewBox="0 0 640 300" role="img" aria-label="Jam dihemat per tahun" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="620" y1="236.0" y2="236.0" stroke="#DADCE0"/><text x="42" y="240.0" text-anchor="end" font-size="12" fill="#5F6368">0</text><line x1="48" x2="620" y1="187.1" y2="187.1" stroke="#DADCE0"/><text x="42" y="191.1" text-anchor="end" font-size="12" fill="#5F6368">100</text><line x1="48" x2="620" y1="138.2" y2="138.2" stroke="#DADCE0"/><text x="42" y="142.2" text-anchor="end" font-size="12" fill="#5F6368">200</text><line x1="48" x2="620" y1="89.3" y2="89.3" stroke="#DADCE0"/><text x="42" y="93.3" text-anchor="end" font-size="12" fill="#5F6368">300</text><line x1="48" x2="620" y1="40.4" y2="40.4" stroke="#DADCE0"/><text x="42" y="44.4" text-anchor="end" font-size="12" fill="#5F6368">400</text><rect x="78.5" y="172.6" width="129.7" height="63.4" rx="3" fill="#1A73E8"/><text x="143.3" y="167.6" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">130</text><text x="143.3" y="250" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-28 143.3 250)">4/bulan</text><rect x="269.2" y="109.3" width="129.7" height="126.7" rx="3" fill="#E37400"/><text x="334.0" y="104.3" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">259</text><text x="334.0" y="250" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-28 334.0 250)">8/bulan</text><rect x="459.8" y="46.0" width="129.7" height="190.0" rx="3" fill="#1A73E8"/><text x="524.7" y="41.0" text-anchor="middle" font-size="11.5" font-weight="700" fill="#202124">389</text><text x="524.7" y="250" text-anchor="end" font-size="12" fill="#5F6368" transform="rotate(-28 524.7 250)">12/bulan</text></svg><p class="foot">Skenario jumlah laporan per bulan; batang jingga = skenario dasar. Perkiraan dari asumsi 170 menit manual.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak</h2>
+<div class="card"><ul class="t"><li>Jadikan ETL ini jalur standar masuknya log Excel.</li><li>Karantina lalu koreksi manusia, jangan perbaiki diam-diam.</li><li>Template baru ditambah lewat <code>column_mapping.yml</code> tanpa mengubah kode.</li></ul></div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama kecuali angka durasi</small></h2>
+<div class="card"><ul class="t">
+<li>Rekonsiliasi per file: 60 dari 60 lulus; cek silang pandas 10 dari 10; Excel (LibreOffice) 241 dari 241.</li>
+<li>Uji run ulang dan koreksi karantina: 21 dari 21 lulus.</li>
+<li>Durasi run dan waktu tunggu bergantung mesin: run ulang memberi 2,2 detik, bukan 1,3.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Data simulasi: hasil membuktikan metode, log nyata bisa lebih beragam.</li>
+<li>Menit per langkah sebelum ETL adalah asumsi, bukan pengukuran.</li>
+<li>Cek silang Excel dihitung ulang oleh LibreOffice, bukan Microsoft Excel.</li>
+<li>Dashboard belum di-deploy; workflow GitHub Actions ditulis tetapi belum terbukti jalan di GitHub.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t"><li>Repository: <a href="https://github.com/bagusbernadi/Project-33-Automated-Excel-to-SQL-ETL" target="_blank" rel="noopener">GitHub</a></li><li>Ringkasan 1 halaman: <a href="Project-33-One-Pager.pdf">Project-33-One-Pager.pdf</a></li></ul><p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository (seed tetap).</p></div>
+
+</main></body></html>

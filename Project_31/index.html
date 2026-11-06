@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 31: Job Market & Skill Demand Analysis</title><meta name="description" content="Skill yang diminta pada 48 lowongan Data Analyst Jobstreet Indonesia. Python, SQL, scraping.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 31: Job Market & Skill Demand Analysis"><meta property="og:description" content="Excel (62%) dan SQL (46%) paling sering diminta di 48 lowongan Data Analyst; 65% di Jakarta.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 31: skill apa yang paling diminta lowongan Data Analyst?</h1><p><b>Tujuan project:</b> memetakan skill, kota, dan salary pada lowongan Data Analyst Indonesia. <b>Satu kali ambil, 48 lowongan.</b></p><div class="tags"><span class="tag a">Status: selesai di branch build</span><span class="tag">Pasar kerja · scraping</span><span class="tag">n = 48</span><span class="tag">Python · SQL · Playwright</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>Sekali ambil, 48 lowongan.</b> Bukan statistik pasar. Scraper mingguan dan dashboard publik belum dijalankan; pertanyaan tren (Q10) dan Q11 belum bisa dijawab.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Skill dan kisaran salary apa yang paling banyak diminta pada lowongan Data Analyst di Indonesia, di kota mana, dan bagaimana trennya?</dd>
+<dt>Data</dt><dd>51 lowongan Jobstreet Indonesia (Oktober 2026, satu kali ambil); 3 iklan ganda dibuang, 48 lowongan unik dianalisis.</dd>
+<dt>Temuan utama</dt><dd><b>Excel (62%), Dashboard, SQL (46%) dan Power BI</b> paling sering diminta. Jakarta memegang 64,6% lowongan. Salary hanya tercantum di 9 lowongan.</dd>
+<dt>Keputusan yang didukung</dt><dd>Prioritaskan Excel dan SQL, lalu Power BI; jangan memakai salary di sini sebagai patokan negosiasi.</dd>
+<dt>Metode</dt><dd>Regex + kamus 15 skill, DuckDB + SQL, pandas crosscheck, interval Wilson, uji binomial untuk 5 hipotesis.</dd>
+<dt>Catatan jujur</dt><dd>Interval kepercayaan lebar (n = 48). Validasi skill extraction memakai 20 lowongan berlabel dari Claude, bukan manusia.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada 48 lowongan</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Skill</span><h3>Excel dan SQL jadi dasar</h3><p>Excel 62,5% (CI 48–75%), SQL 45,8%. Pasangan terbanyak: Power BI dan SQL (15 lowongan).</p></div>
+<div class="card"><span class="q">Temuan 2 · Lokasi</span><h3>Pasar terpusat di Jakarta</h3><p>31 dari 48 lowongan; remote atau hybrid hanya 4,2%.</p></div>
+<div class="card"><span class="q">Temuan 3 · Salary</span><h3>Data salary terlalu sedikit</h3><p>9 lowongan (18,8%) mencantumkan salary; median Rp 5,75–7,50 juta per bulan.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Excel diminta di sekitar 6 dari 10 lowongan</h3><div class="row"><span class="n" style="width:150px">Excel</span><span class="t"><span class="b" style="width:78.1%;background:#E37400"></span></span><span class="v">62%</span></div><div class="row"><span class="n" style="width:150px">Dashboard</span><span class="t"><span class="b" style="width:72.9%;background:#E37400"></span></span><span class="v">58%</span></div><div class="row"><span class="n" style="width:150px">SQL</span><span class="t"><span class="b" style="width:57.3%;background:#1A73E8"></span></span><span class="v">46%</span></div><div class="row"><span class="n" style="width:150px">Power BI</span><span class="t"><span class="b" style="width:54.7%;background:#1A73E8"></span></span><span class="v">44%</span></div><div class="row"><span class="n" style="width:150px">Tableau</span><span class="t"><span class="b" style="width:44.3%;background:#1A73E8"></span></span><span class="v">35%</span></div><div class="row"><span class="n" style="width:150px">Python</span><span class="t"><span class="b" style="width:39.1%;background:#1A73E8"></span></span><span class="v">31%</span></div><div class="row"><span class="n" style="width:150px">Looker Studio</span><span class="t"><span class="b" style="width:23.4%;background:#1A73E8"></span></span><span class="v">19%</span></div><div class="row"><span class="n" style="width:150px">Google Sheets</span><span class="t"><span class="b" style="width:18.2%;background:#1A73E8"></span></span><span class="v">15%</span></div><p class="foot">Persentase dari 48 lowongan. Interval 95% Wilson lebar, mis. Excel 48–75%.</p></div>
+<div class="card fig"><h3>Hampir dua pertiga lowongan ada di Jakarta</h3><div class="row"><span class="n" style="width:150px">Jakarta</span><span class="t"><span class="b" style="width:80.7%;background:#E37400"></span></span><span class="v">65%</span></div><div class="row"><span class="n" style="width:150px">Tangerang</span><span class="t"><span class="b" style="width:15.6%;background:#1A73E8"></span></span><span class="v">12%</span></div><div class="row"><span class="n" style="width:150px">Surabaya</span><span class="t"><span class="b" style="width:13.0%;background:#1A73E8"></span></span><span class="v">10%</span></div><div class="row"><span class="n" style="width:150px">Medan</span><span class="t"><span class="b" style="width:5.2%;background:#1A73E8"></span></span><span class="v">4%</span></div><div class="row"><span class="n" style="width:150px">Bali</span><span class="t"><span class="b" style="width:2.6%;background:#1A73E8"></span></span><span class="v">2%</span></div><p class="foot">Lima kota teratas dari 48 lowongan.</p></div>
+<div class="card fig"><h3>Menambah Power BI menaikkan peluang melamar ke 44%</h3><div class="row"><span class="n" style="width:150px">Excel</span><span class="t"><span class="b" style="width:52.1%;background:#1A73E8"></span></span><span class="v">31,2%</span></div><div class="row"><span class="n" style="width:150px">Excel + SQL</span><span class="t"><span class="b" style="width:59.0%;background:#1A73E8"></span></span><span class="v">35,4%</span></div><div class="row"><span class="n" style="width:150px">Excel + SQL + Python</span><span class="t"><span class="b" style="width:59.0%;background:#1A73E8"></span></span><span class="v">35,4%</span></div><div class="row"><span class="n" style="width:150px">Excel + SQL + Python + Power BI</span><span class="t"><span class="b" style="width:72.9%;background:#188038"></span></span><span class="v">43,8%</span></div><p class="foot">Porsi lowongan yang bisa dilamar tanpa kekurangan skill, menurut skill yang dimiliki (asumsi). Perkiraan, dari 48 lowongan.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak</h2>
+<div class="card"><ul class="t"><li>Prioritaskan Excel dan SQL, lalu Power BI.</li><li>Ulangi analisis setelah scraping mingguan berjalan beberapa minggu.</li></ul>
+<p>Dengan Excel, SQL, dan Python, 35,4% lowongan bisa dilamar; menambah Power BI: 43,8% <span class="est">perkiraan</span>.</p></div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 31 dari 31 lulus.</li>
+<li>Skill extraction pada 20 lowongan berlabel: precision 100%, recall 97% (label dari Claude; 2 skill terlewat).</li>
+<li>Hipotesis: 1 terbukti, 4 sebagian, 0 tidak terbukti.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Hanya 48 lowongan, satu platform, satu kali ambil; belum ada tren mingguan.</li>
+<li>Lisensi data belum diverifikasi; robots.txt dan ketentuan layanan belum diperiksa.</li>
+<li>Scraper dan workflow mingguan ditulis tetapi belum pernah dijalankan; dashboard belum di-deploy.</li>
+<li>Level dari judul, bidang kerja sebagai pengganti industri, dan skill yang dimiliki adalah asumsi.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sumber resmi: <a href="https://id.jobstreet.com/" target="_blank" rel="noopener">id.jobstreet.com</a> (Versi 1, Oktober 2026; lisensi belum diverifikasi)</li>
+<li>Arsip data (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/jobstreet-job-postings" target="_blank" rel="noopener">jobstreet-job-postings</a></li>
+<li>Repository: <a href="https://github.com/bagusbernadi/Project-31-Job-Market-Skill-Demand-Analysis" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-31-One-Pager.pdf">Project-31-One-Pager.pdf</a></li></ul></div>
+
+</main></body></html>
