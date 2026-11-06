@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 24: Privacy-Preserving Data Pipeline (simulasi)</title><meta name="description" content="Pipeline anonimisasi data produksi untuk dibagikan ke pihak luar, dengan uji risiko dan utilitas, pada data simulasi. Python, DuckDB.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 24: Privacy-Preserving Data Pipeline (simulasi)"><meta property="og:description" content="Pada data simulasi, anonimisasi menurunkan baris unik dari 100% ke 0% dan serangan kamus pada nama operator dari 100% ke 0%, sementara hasil analisis tetap sama.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 24: bagaimana membagikan data produksi tanpa membocorkan identitas? (simulasi)</h1><p><b>Tujuan project:</b> membagikan data operasional ke pihak luar tanpa membocorkan identitas, dengan hasil analisis tetap sama. <b>Data adalah simulasi dengan identitas palsu.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · privasi data</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · HMAC</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Data produksi, nama operator, nomor telepon, dan customer dibangkitkan (identitas palsu). Hasil membuktikan metode, bukan kondisi pabrik.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana membagikan data operasional ke pihak luar tanpa membocorkan identitas, sementara hasil analisisnya tetap sama?</dd>
+<dt>Data</dt><dd>Simulasi lini perakitan sepeda motor: 4.500 baris produksi, 6.313 baris defect, 39 operator, 12 customer, 450 lot; 142 catatan bebas memuat nama atau customer, 1.500 kode lot memuat nama customer.</dd>
+<dt>Temuan utama</dt><dd>Baris unik pada kombinasi terketat turun dari 100% ke 0% (k minimum 1 → 5); serangan kamus memulihkan 100% nama dengan hash biasa dan <b>0% dengan HMAC berkunci</b>. Yield lini sama di data asli dan anonim (selisih maksimum KPI 2e-09).</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai kelima metode sekaligus, jangan hash tanpa kunci, jangan hanya regex untuk catatan bebas, pilih generalisasi mingguan. Hemat sekitar 18 jam kerja per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Python + DuckDB; HMAC-SHA256, mapping key, generalisasi tanggal, skala indeks, allowlist catatan; ukur k-anonymity, serangan kamus, linkage, dan utilitas KPI.</dd>
+<dt>Catatan jujur</dt><dd>Risiko sisa nyata: pihak yang punya daftar jaga mingguan lengkap masih bisa menyambungkan 38 dari 39 kode operator ke orangnya, dan skala indeks bukan pengaman penuh. Differential privacy tidak dipakai.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Pseudonim</span><h3>Hash tanpa kunci tidak aman</h3><p>Dengan 19.462 nama kandidat, hash biasa memulihkan 39 dari 39 operator; HMAC berkunci 0.</p></div>
+<div class="card"><span class="q">Temuan 2 · Catatan bebas</span><h3>Regex saja tidak cukup</h3><p>142 catatan memuat identitas; regex menyisakan 21, allowlist menyisakan 0 (tetapi 142 catatan ikut dihapus).</p></div>
+<div class="card"><span class="q">Temuan 3 · Utilitas</span><h3>Hasil analisis tidak berubah</h3><p>Yield lini sama; 16 dari 16 KPI identik; stasiun terburuk dan defect teratas sama persis.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Hash biasa pulih 100% lewat serangan kamus; HMAC berkunci 0%</h3><div class="row"><span class="n" style="width:150px">Hash biasa (SHA-256)</span><span class="t"><span class="b" style="width:100.0%;background:#D93025"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">HMAC, penyerang pakai hash biasa</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0%</span></div><div class="row"><span class="n" style="width:150px">HMAC, penyerang tebak 6 kunci umum</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0%</span></div><p class="foot">Persentase nama operator yang berhasil ditebak (19.462 nama kandidat).</p></div>
+<div class="card fig"><h3>Hanya allowlist yang menghabiskan kebocoran di catatan bebas</h3><div class="row"><span class="n" style="width:150px">Sebelum</span><span class="t"><span class="b" style="width:94.7%;background:#D93025"></span></span><span class="v">142</span></div><div class="row"><span class="n" style="width:150px">Regex nama dan telepon</span><span class="t"><span class="b" style="width:14.0%;background:#E37400"></span></span><span class="v">21</span></div><div class="row"><span class="n" style="width:150px">Allowlist frasa aman</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0</span></div><p class="foot">Catatan yang masih memuat identitas dari 142 catatan awal. Allowlist ikut menghapus catatan bermanfaat di luar daftar.</p></div>
+<div class="card fig"><h3>Generalisasi mingguan menjaga tren dan memenuhi k ≥ 5</h3><div class="row"><span class="n" style="width:150px">Harian (k min 1)</span><span class="t"><span class="b" style="width:100.0%;background:#D93025"></span></span><span class="v">1,00</span></div><div class="row"><span class="n" style="width:150px">Mingguan (k min 5)</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">1,00</span></div><div class="row"><span class="n" style="width:150px">Dua mingguan (k min 5)</span><span class="t"><span class="b" style="width:89.9%;background:#E37400"></span></span><span class="v">0,90</span></div><div class="row"><span class="n" style="width:150px">Bulanan (k min 5)</span><span class="t"><span class="b" style="width:79.8%;background:#E37400"></span></span><span class="v">0,80</span></div><p class="foot">Korelasi tren dengan data harian per tingkat generalisasi; harian gagal memenuhi k ≥ 5 (k minimum 1).</p></div>
+<div class="card fig"><h3>Risiko sisa tetap ada setelah anonimisasi</h3><div class="row"><span class="n" style="width:150px">Skala indeks: nilai asli pulih bila satu nilai diketahui</span><span class="t"><span class="b" style="width:100.0%;background:#D93025"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Operator tersambung bila daftar jaga mingguan diketahui</span><span class="t"><span class="b" style="width:97.4%;background:#D93025"></span></span><span class="v">97%</span></div><div class="row"><span class="n" style="width:150px">Catatan dengan identitas lolos regex (dari 142)</span><span class="t"><span class="b" style="width:14.8%;background:#E37400"></span></span><span class="v">15%</span></div><p class="foot">Anonim di sini belum tentu anonim di tempat lain; digabung data penerima, risiko naik.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pakai kombinasi kelima metode</b>: HMAC, mapping key, generalisasi mingguan, skala indeks, allowlist catatan.</li>
+<li><b>Jangan</b> memakai hash tanpa kunci atau regex saja; tutup kode operator pada sel yang hanya dikerjakan satu orang.</li>
+<li><b>Sebelum dipakai pada data kerja:</b> minta izin berbagi data, simpan kunci acak di tempat rahasia, dan jalankan ulang seluruh uji pada data nyata.</li></ul></div>
+<div class="scroll"><table><tr><th>Menit manual per file</th><th>File per tahun</th><th>Hemat per tahun</th></tr>
+<tr><td>30</td><td>12</td><td>6 jam <span class="est">perkiraan</span></td></tr><tr><td>30</td><td>24</td><td>12 jam <span class="est">perkiraan</span></td></tr><tr><td>30</td><td>48</td><td>24 jam <span class="est">perkiraan</span></td></tr><tr><td>45</td><td>12</td><td>9 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>45</td><td>24</td><td>18 jam <span class="est">perkiraan</span></td></tr><tr><td>45</td><td>48</td><td>36 jam <span class="est">perkiraan</span></td></tr><tr><td>60</td><td>12</td><td>12 jam <span class="est">perkiraan</span></td></tr><tr><td>60</td><td>24</td><td>24 jam <span class="est">perkiraan</span></td></tr><tr><td>60</td><td>48</td><td>48 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: anonimisasi manual di Excel 45 menit per file dan 24 file per tahun (tidak diukur); pipeline sekitar 1 detik per file (diukur).</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 26 dari 26 pemeriksaan cocok.</li>
+<li>Uji validasi (keluaran sama dua kali jalan, balik ke asli): 10 dari 10 lulus; pindai rahasia dan identitas: 8 dari 8 lulus; pytest 36 lulus.</li>
+<li>Kode lot kembali 100% ke nilai asli (4.500 dari 4.500 baris); tanpa normalisasi nama, 38 dari 39 orang mendapat lebih dari satu kode.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b> dengan identitas palsu; kunci HMAC simulasi dibuat acak lokal, pada data kerja harus di secret manager.</li>
+<li>Skala indeks bukan pengaman penuh: satu nilai asli diketahui, semua nilai lain terhitung.</li>
+<li>Mapping key sengaja bisa dibalik dan harus disimpan terpisah; kode HMAC tidak bisa dibalik tanpa daftar karyawan.</li>
+<li>Differential privacy tidak dipakai; dashboard belum di-deploy; waktu manual per file adalah asumsi.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (pipeline, kebijakan kolom, dashboard): <a href="https://github.com/bagusbernadi/Project-24-Privacy-Preserving-Data-Pipeline" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-24-One-Pager.pdf">Project-24-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

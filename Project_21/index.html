@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 21: NL-to-SQL Analytics Assistant (simulasi, tanpa LLM)</title><meta name="description" content="Asisten tanya-data bahasa biasa ke SQL dengan guardrail, dievaluasi pada golden set. Pengganti lokal, Claude API tidak dipanggil.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 21: NL-to-SQL Analytics Assistant (simulasi, tanpa LLM)"><meta property="og:description" content="Pada data simulasi, akurasi NL-to-SQL naik dari 0% ke 96,7% dengan skema dan definisi KPI; LLM nyata belum diuji.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 21: bisakah orang non-teknis bertanya data produksi tanpa SQL? (simulasi)</h1><p><b>Tujuan project:</b> membangun asisten yang menerjemahkan pertanyaan bahasa biasa ke SQL aman dan menilai akurasinya. <b>Data adalah simulasi; LLM tidak dipanggil.</b></p><div class="tags"><span class="tag a">Status: selesai (aplikasi belum di-deploy)</span><span class="tag">Manufaktur · NL-to-SQL</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · Streamlit</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI, TANPA LLM.</b> Data produksi dibangkitkan. Penulis SQL adalah <u>pengganti berbasis aturan lokal, bukan Claude</u>; akurasi, latency, dan biaya bukan pengukuran model nyata.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bisakah orang non-teknis bertanya data produksi dengan bahasa biasa dan mendapat angka benar tanpa menulis SQL, dan seberapa akurat dibanding SQL manual?</dd>
+<dt>Data</dt><dd>Simulasi: 4.500 baris produksi harian, 5.728 baris defect, 10 stasiun, 3 model, 2 shift. Golden set 30 pertanyaan, red-team 15 percobaan.</dd>
+<dt>Temuan utama</dt><dd>Akurasi eksekusi naik dari 0% (tanpa skema) ke 26,7% (skema) ke <b>96,7%</b> (skema + definisi KPI). Guardrail menolak 15 dari 15 percobaan berbahaya.</dd>
+<dt>Keputusan yang didukung</dt><dd>Selalu kirim skema dan definisi KPI ke penulis SQL, tampilkan SQL di tiap jawaban, dan pertahankan guardrail kode. Hemat sekitar 48,3 jam analis per bulan <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Golden set dengan SQL referensi, execution accuracy dengan CI Wilson, McNemar eksak antar konfigurasi, guardrail kode + koneksi read-only, uji red-team, cek silang DuckDB dan Excel.</dd>
+<dt>Catatan jujur</dt><dd>Konfigurasi dan pengganti dirancang bersama, jadi selisih antar konfigurasi adalah hasil rancangan, bukan bukti tentang LLM nyata. Golden set kecil dan ditulis orang yang sama; hasil optimistis.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Akurasi</span><h3>Definisi KPI menentukan</h3><p>29 dari 30 benar dengan skema + KPI (CI 83,3%–99,4%); skema saja 8 dari 30; tanpa skema 0 dari 30.</p></div>
+<div class="card"><span class="q">Temuan 2 · Keamanan</span><h3>Guardrail kode perlu, read-only tidak cukup</h3><p>Read-only saja menolak 12 dari 15, dengan akses file dimatikan 14; guardrail kode 15. Tabel produksi tidak berubah.</p></div>
+<div class="card"><span class="q">Temuan 3 · Ambigu</span><h3>Klarifikasi hanya dengan KPI</h3><p>Pertanyaan ambigu diklarifikasi 3 dari 3 pada skema + KPI, 0 dari 3 pada skema saja.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Akurasi melonjak dari 0% ke 96,7% setelah skema dan definisi KPI ditambahkan</h3><div class="row"><span class="n" style="width:150px">Tanpa skema</span><span class="t"><span class="b" style="width:0.0%;background:#D93025"></span></span><span class="v">0,0%</span></div><div class="row"><span class="n" style="width:150px">Skema</span><span class="t"><span class="b" style="width:26.7%;background:#E37400"></span></span><span class="v">26,7%</span></div><div class="row"><span class="n" style="width:150px">Skema + definisi KPI</span><span class="t"><span class="b" style="width:96.7%;background:#188038"></span></span><span class="v">96,7%</span></div><p class="foot">Execution accuracy pada golden set 30 pertanyaan; pengganti LLM lokal, bukan Claude.</p></div>
+<div class="card fig"><h3>Hampir semua jenis pertanyaan benar pada konfigurasi terbaik</h3><div class="row"><span class="n" style="width:150px">Agregasi</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Filter tanggal</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Join</span><span class="t"><span class="b" style="width:83.3%;background:#E37400"></span></span><span class="v">83%</span></div><div class="row"><span class="n" style="width:150px">Definisi KPI</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">Ambigu</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><p class="foot">Akurasi per jenis pertanyaan, skema + definisi KPI. Jumlah per jenis kecil (3–8), jadi CI lebar.</p></div>
+<div class="card fig"><h3>Hanya guardrail kode yang menolak seluruh 15 percobaan berbahaya</h3><div class="row"><span class="n" style="width:150px">Guardrail kode</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">15 dari 15</span></div><div class="row"><span class="n" style="width:150px">Read-only + akses file mati</span><span class="t"><span class="b" style="width:93.3%;background:#1A73E8"></span></span><span class="v">14 dari 15</span></div><div class="row"><span class="n" style="width:150px">Read-only saja</span><span class="t"><span class="b" style="width:80.0%;background:#E37400"></span></span><span class="v">12 dari 15</span></div><p class="foot">Percobaan red-team (UPDATE, DELETE, DROP, tabel di luar daftar, baca file).</p></div>
+<div class="card fig"><h3>Hemat puluhan jam analis per bulan bila satu query manual 15 menit</h3><div class="row"><span class="n" style="width:150px">5 menit/pertanyaan</span><span class="t"><span class="b" style="width:14.6%;background:#9AA0A6"></span></span><span class="v">16,1 jam</span></div><div class="row"><span class="n" style="width:150px">15 menit/pertanyaan (dasar)</span><span class="t"><span class="b" style="width:43.9%;background:#1A73E8"></span></span><span class="v">48,3 jam</span></div><div class="row"><span class="n" style="width:150px">30 menit/pertanyaan</span><span class="t"><span class="b" style="width:87.9%;background:#9AA0A6"></span></span><span class="v">96,7 jam</span></div><p class="foot">Perkiraan; 200 pertanyaan per bulan dan menit manual adalah asumsi.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pasang Claude API</b> pada antarmuka penulis SQL dan jalankan ulang golden set dan red-team sebelum menyimpulkan akurasi.</li>
+<li><b>Pertahankan guardrail kode</b> dan koneksi read-only dengan akses file dimatikan; tampilkan SQL pada setiap jawaban.</li>
+<li><b>Perluas golden set</b> dari 30 pertanyaan, terutama pengelompokan mingguan dan RTY per model.</li></ul></div>
+<div class="note"><b>Dampak (perkiraan):</b> sekitar 48,3 jam analis per bulan (200 pertanyaan × 96,7% benar × 15 menit); biaya API sekitar 0,25 USD per 100 pertanyaan dengan token dan harga asumsi.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang: 75 dari 75 nilai cocok; pytest 57 dari 57 lulus; aplikasi (AppTest) 10 dari 10 lulus.</li>
+<li>Lima pertanyaan inti terhadap view KPI: 3 dari 5 sama persis (pengganti tidak mendukung pengelompokan mingguan dan RTY per model).</li>
+<li>Sidik jari data simulasi cocok dengan DataCenter (6 dari 6 berkas).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; <b>Claude tidak dipanggil</b>. Akurasi, latency (3 detik), harga token, menit manual, dan volume adalah asumsi atau hasil pengganti.</li>
+<li>Golden set 30 pertanyaan ditulis orang yang sama dengan pengganti dan guardrail; hasil optimistis.</li>
+<li>Aplikasi belum di-deploy; target "orang awam dalam 1 menit" belum diuji.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (pipeline, guardrail, aplikasi): <a href="https://github.com/bagusbernadi/Project-21-NL-to-SQL-Analytics-Assistant" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-21-One-Pager.pdf">Project-21-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

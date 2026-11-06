@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 20: Push-Test Data Pipeline (simulasi)</title><meta name="description" content="Pipeline otomatis CSV mesin push test ke database, Cpk per model dan kondisi, pada data simulasi. Python, DuckDB, SQL.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 20: Push-Test Data Pipeline (simulasi)"><meta property="og:description" content="Pada data simulasi, 96,0% file dimuat otomatis dan hanya satu dari empat kombinasi model-kondisi yang di bawah Cpk 1,33.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 20: bisakah CSV mesin push test masuk database otomatis? (simulasi)</h1><p><b>Tujuan project:</b> mengganti macro VBA dan copy-paste manual dengan pipeline yang memuat CSV push test ke database dan menghitung Cpk per model dan kondisi. <b>Data adalah simulasi.</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Manufaktur · pipeline</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · SQL</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI.</b> Ribuan CSV mesin push test dibangkitkan dengan masalah yang ditanam (format baru, file rusak, salinan). Macro VBA lama ditiru dari deskripsi, bukan dari workbook asli.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana mengganti macro VBA dan copy-paste manual agar CSV mesin push test masuk database otomatis, terbaca benar, dan siap dianalisis per model dan kondisi?</dd>
+<dt>Data</dt><dd>Simulasi: 1.500 file unik (+14 salinan), 18.003 hasil ukur dimuat, 2 mesin, 2 model, sebelum dan sesudah oven.</dd>
+<dt>Temuan utama</dt><dd>1.440 dari 1.500 file (96,0%) dimuat; 60 masuk karantina dengan alasan. Satu dari 4 kombinasi di bawah Cpk 1,33: <b>Model B before oven</b> (1,04). Macro lama salah membaca 424 nilai (3,1%).</dd>
+<dt>Keputusan yang didukung</dt><dd>Jalankan pipeline terjadwal dan tinjau karantina; selidiki kalibrasi PT-02; turunkan variasi kombinasi Cpk rendah. Hemat sekitar 481 jam kerja manual per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Parser Python + hash isi + karantina, DuckDB dan view SQL, Cpk dengan CI, uji permutasi untuk penurunan rata-rata, cek silang pandas dan Excel (LibreOffice).</dd>
+<dt>Catatan jujur</dt><dd>Generator dan pipeline ditulis orang yang sama, jadi uji pemulihan optimistis. 3 dari 23 file terpotong tidak terdeteksi sebagai terpotong.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Pipeline</span><h3>Percobaan ulang tidak menggandakan data</h3><p>Percobaan kedua menambah 0 baris test_run dan 0 baris measurement (idempoten); 14 salinan terdeteksi lewat hash isi.</p></div>
+<div class="card"><span class="q">Temuan 2 · Cpk</span><h3>Satu kombinasi di bawah target</h3><p>Model B before oven: Cpk 1,04 (CI 1,02–1,07), tiga kombinasi lain 2,12–2,73.</p></div>
+<div class="card"><span class="q">Temuan 3 · Mesin</span><h3>PT-02 turun sekitar 808 g</h3><p>Pada 2026-05-23 sampai 2026-05-29 (10,6%, p permutasi 0,001); PT-01 tidak signifikan (p 0,15).</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Hanya Model B before oven yang di bawah Cpk 1,33</h3><div class="row"><span class="n" style="width:150px">Model B · before oven</span><span class="t"><span class="b" style="width:32.6%;background:#D93025"></span></span><span class="v">1,04</span></div><div class="row"><span class="n" style="width:150px">Model A · before oven</span><span class="t"><span class="b" style="width:66.4%;background:#188038"></span></span><span class="v">2,12</span></div><div class="row"><span class="n" style="width:150px">Model B · after oven</span><span class="t"><span class="b" style="width:80.1%;background:#188038"></span></span><span class="v">2,56</span></div><div class="row"><span class="n" style="width:150px">Model A · after oven</span><span class="t"><span class="b" style="width:85.4%;background:#188038"></span></span><span class="v">2,73</span></div><p class="foot">Cpk per model dan kondisi; hijau ≥ 1,33, merah di bawah target.</p></div>
+<div class="card fig"><h3>Rata-rata PT-02 anjlok sekitar seminggu setelah kalibrasi, PT-01 stabil</h3><svg viewBox="0 0 640 300" role="img" aria-label="Rata-rata gaya push per minggu (g)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="590" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">6.800</text><line x1="48" x2="590" y1="230.0" y2="230.0" stroke="#DADCE0"/><text x="42" y="234.0" text-anchor="end" font-size="12" fill="#5F6368">7.000</text><line x1="48" x2="590" y1="194.0" y2="194.0" stroke="#DADCE0"/><text x="42" y="198.0" text-anchor="end" font-size="12" fill="#5F6368">7.200</text><line x1="48" x2="590" y1="158.0" y2="158.0" stroke="#DADCE0"/><text x="42" y="162.0" text-anchor="end" font-size="12" fill="#5F6368">7.400</text><line x1="48" x2="590" y1="122.0" y2="122.0" stroke="#DADCE0"/><text x="42" y="126.0" text-anchor="end" font-size="12" fill="#5F6368">7.600</text><line x1="48" x2="590" y1="86.0" y2="86.0" stroke="#DADCE0"/><text x="42" y="90.0" text-anchor="end" font-size="12" fill="#5F6368">7.800</text><line x1="48" x2="590" y1="50.0" y2="50.0" stroke="#DADCE0"/><text x="42" y="54.0" text-anchor="end" font-size="12" fill="#5F6368">8.000</text><line x1="48" x2="590" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">8.200</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W14</text><text x="89.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W15</text><text x="131.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W16</text><text x="173.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W17</text><text x="214.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W18</text><text x="256.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W19</text><text x="298.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W20</text><text x="339.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W21</text><text x="381.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W22</text><text x="423.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W23</text><text x="464.9" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W24</text><text x="506.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W25</text><text x="548.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W26</text><text x="590.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">W27</text><line x1="339.8" x2="339.8" y1="14" y2="266" stroke="#FBBC04" stroke-width="2"/><text x="343.8" y="25" font-size="11.5" font-weight="700" fill="#3C2A00">kalibrasi PT-02</text><polyline points="48.0,89.8 89.7,92.0 131.4,98.5 173.1,126.2 214.8,104.0 256.5,93.0 298.2,77.3 339.8,134.6 381.5,215.9 423.2,107.0 464.9,97.6 506.6,113.0 548.3,98.1 590.0,191.7" fill="none" stroke="#D93025" stroke-width="2.4"/><circle cx="48.0" cy="89.8" r="2.8" fill="#D93025"/><circle cx="89.7" cy="92.0" r="2.8" fill="#D93025"/><circle cx="131.4" cy="98.5" r="2.8" fill="#D93025"/><circle cx="173.1" cy="126.2" r="2.8" fill="#D93025"/><circle cx="214.8" cy="104.0" r="2.8" fill="#D93025"/><circle cx="256.5" cy="93.0" r="2.8" fill="#D93025"/><circle cx="298.2" cy="77.3" r="2.8" fill="#D93025"/><circle cx="339.8" cy="134.6" r="2.8" fill="#D93025"/><circle cx="381.5" cy="215.9" r="2.8" fill="#D93025"/><circle cx="423.2" cy="107.0" r="2.8" fill="#D93025"/><circle cx="464.9" cy="97.6" r="2.8" fill="#D93025"/><circle cx="506.6" cy="113.0" r="2.8" fill="#D93025"/><circle cx="548.3" cy="98.1" r="2.8" fill="#D93025"/><circle cx="590.0" cy="191.7" r="2.8" fill="#D93025"/><polyline points="48.0,100.8 89.7,118.0 131.4,94.2 173.1,90.7 214.8,108.9 256.5,91.0 298.2,94.9 339.8,84.6 381.5,82.5 423.2,124.1 464.9,89.6 506.6,103.4 548.3,99.3 590.0,125.3" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="100.8" r="2.8" fill="#1A73E8"/><circle cx="89.7" cy="118.0" r="2.8" fill="#1A73E8"/><circle cx="131.4" cy="94.2" r="2.8" fill="#1A73E8"/><circle cx="173.1" cy="90.7" r="2.8" fill="#1A73E8"/><circle cx="214.8" cy="108.9" r="2.8" fill="#1A73E8"/><circle cx="256.5" cy="91.0" r="2.8" fill="#1A73E8"/><circle cx="298.2" cy="94.9" r="2.8" fill="#1A73E8"/><circle cx="339.8" cy="84.6" r="2.8" fill="#1A73E8"/><circle cx="381.5" cy="82.5" r="2.8" fill="#1A73E8"/><circle cx="423.2" cy="124.1" r="2.8" fill="#1A73E8"/><circle cx="464.9" cy="89.6" r="2.8" fill="#1A73E8"/><circle cx="506.6" cy="103.4" r="2.8" fill="#1A73E8"/><circle cx="548.3" cy="99.3" r="2.8" fill="#1A73E8"/><circle cx="590.0" cy="125.3" r="2.8" fill="#1A73E8"/></svg><p class="foot">Rata-rata gaya push per minggu per mesin (g). Minggu terakhir (W27) PT-02 juga rendah; tidak dianalisis lebih lanjut.</p></div>
+<div class="card fig"><h3>96,0% file dimuat; sisanya masuk karantina dengan alasan</h3><div class="row"><span class="n" style="width:150px">Dimuat</span><span class="t"><span class="b" style="width:90.0%;background:#188038"></span></span><span class="v">1.440</span></div><div class="row"><span class="n" style="width:150px">File terpotong</span><span class="t"><span class="b" style="width:1.2%;background:#E37400"></span></span><span class="v">19</span></div><div class="row"><span class="n" style="width:150px">Format mesin baru</span><span class="t"><span class="b" style="width:1.1%;background:#E37400"></span></span><span class="v">18</span></div><div class="row"><span class="n" style="width:150px">Header tidak lengkap</span><span class="t"><span class="b" style="width:0.7%;background:#E37400"></span></span><span class="v">11</span></div><div class="row"><span class="n" style="width:150px">File kosong</span><span class="t"><span class="b" style="width:0.6%;background:#E37400"></span></span><span class="v">10</span></div><div class="row"><span class="n" style="width:150px">Tanpa hasil ukur</span><span class="t"><span class="b" style="width:0.1%;background:#E37400"></span></span><span class="v">2</span></div><div class="row"><span class="n" style="width:150px">Salinan (dilewati)</span><span class="t"><span class="b" style="width:0.9%;background:#9AA0A6"></span></span><span class="v">14</span></div><p class="foot">Hasil percobaan pertama, jumlah file. Salinan dilewati lewat hash isi.</p></div>
+<div class="card fig"><h3>Hampir semua file bermasalah yang ditanam terdeteksi</h3><div class="row"><span class="n" style="width:150px">format mesin baru</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">file terpotong (bukan format baru)</span><span class="t"><span class="b" style="width:87.0%;background:#E37400"></span></span><span class="v">87%</span></div><div class="row"><span class="n" style="width:150px">file terpotong yang juga format baru</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">file kosong</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">kolom hilang (tanpa kolom Force)</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">salinan ganda</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><div class="row"><span class="n" style="width:150px">format angka titik/koma lain</span><span class="t"><span class="b" style="width:100.0%;background:#188038"></span></span><span class="v">100%</span></div><p class="foot">Persentase terdeteksi per jenis masalah tertanam. Uji pemulihan dengan generator yang sama dengan pipeline, jadi optimistis.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Jadwalkan pipeline</b> dan tinjau folder karantina secara rutin.</li>
+<li><b>Tambah aturan</b> untuk format mesin baru (kini 18 file di karantina).</li>
+<li><b>Selidiki kalibrasi PT-02</b> dan turunkan variasi kombinasi dengan Cpk di bawah 1,33.</li></ul></div>
+<div class="scroll"><table><tr><th>Asumsi menit manual per file</th><th>Hemat per tahun</th></tr>
+<tr><td>3 menit</td><td>289 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>5 menit (dasar)</td><td>481 jam <span class="est">perkiraan</span></td></tr><tr><td>10 menit</td><td>963 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: sekitar 5.776 file per tahun; menit manual per file adalah asumsi project.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas (parser independen) dan SQL vs Excel (LibreOffice): 5.910 dari 5.910 nilai cocok.</li>
+<li>pytest: 13 dari 13 lulus; dashboard (AppTest): 13 dari 13 lulus.</li>
+<li>Sidik jari data simulasi cocok dengan DataCenter (SHA-256).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; angka bukan lini produksi.</li>
+<li>Macro lama ditiru dari deskripsi; menit manual per file, kapasitas mesin, aturan baca angka, dan jendela 7 hari adalah asumsi.</li>
+<li>Uji shear test ditambahkan dengan nilai dasar dan spesifikasi asumsi; Cpk, tren, dan dashboard hanya untuk push test.</li>
+<li>Dashboard belum di-deploy; target "orang awam menyebut kombinasi Cpk terendah dalam 1 menit" belum diuji.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (parser, SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-20-Push-Test-Data-Pipeline" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-20-One-Pager.pdf">Project-20-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

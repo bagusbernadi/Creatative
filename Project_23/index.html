@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 23: Telegram KPI Reporting Bot (simulasi, dry-run)</title><meta name="description" content="Bot laporan KPI harian otomatis dengan alert yield dan defect, diuji pada data simulasi dengan dry-run. Python, DuckDB.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 23: Telegram KPI Reporting Bot (simulasi, dry-run)"><meta property="og:description" content="Pada data simulasi, alert statistik menangkap 3 dari 3 penurunan yield tanpa alarm palsu, sedangkan ambang tetap memberi 5 alarm palsu.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 23: bisakah laporan KPI harian terkirim otomatis dengan alert yang tepat? (simulasi)</h1><p><b>Tujuan project:</b> mengirim ringkasan KPI harian dan alert ke Telegram otomatis, dengan alarm palsu seminimal mungkin. <b>Data simulasi; bot dry-run, belum mengirim sungguhan.</b></p><div class="tags"><span class="tag a">Status: selesai (belum diuji ke Telegram sungguhan)</span><span class="tag">Manufaktur · automasi</span><span class="tag">DATA SIMULASI</span><span class="tag">Python · DuckDB · Telegram (dry-run)</span></div></header>
+<div class="note" style="border-left-color:#D93025"><b>DATA SIMULASI, BOT DRY-RUN.</b> Data produksi dibangkitkan; bot <u>belum pernah mengirim ke Telegram sungguhan</u>. Pengiriman diuji dengan transport palsu, dan kegagalan serta jeda run terjadwal adalah simulasi.</div>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana mengirim ringkasan KPI harian (yield, NG rate, rework rate per stasiun) beserta grafik ke Telegram secara otomatis, dengan alert yang menangkap masalah nyata tanpa terlalu banyak alarm palsu?</dd>
+<dt>Data</dt><dd>Simulasi lini perakitan sepeda motor: 4.477 baris produksi mentah menjadi 4.440 bersih (111 baris kotor, semua ditemukan), 75 hari kerja; 3 penurunan yield, 2 hari data terlambat, 1 hari kosong ditanam.</dd>
+<dt>Temuan utama</dt><dd>Aturan alert R1 dan R2 menangkap ketiga penurunan yield <b>tanpa alarm palsu</b> (3 dari 3 benar); ambang tetap 86,5% menghasilkan 5 alert palsu dan aturan "defect naik &gt; 50%" 124 dari 143 alert palsu.</dd>
+<dt>Keputusan yang didukung</dt><dd>Pakai R1 dan R2 sebagai alert utama, R3 sebagai informasi tambahan. Otomatisasi menghemat sekitar 114 jam kerja per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>Python + DuckDB + SQL, bot dengan dry-run, alert berbasis rata-rata bergulir 20 hari (σ dan Poisson), replay terhadap kejadian tertanam, cek silang bot vs SQL vs Excel (LibreOffice), pytest.</dd>
+<dt>Catatan jujur</dt><dd>Evaluasi alert memakai 3 kejadian dan data yang sama dengan pemilihan parameter (in-sample). Penurunan perlahan di Dyno baru terdeteksi hari ke-5 dari 7 hari.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data simulasi</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Alert</span><h3>Aturan statistik jauh lebih sedikit alarm palsu</h3><p>R1 3/3 benar, R2 3/3, R3 11 dari 12; ambang tetap 5 palsu dari 10 alert.</p></div>
+<div class="card"><span class="q">Temuan 2 · Penyebab</span><h3>Frame Painting paling banyak NG</h3><p>Yield 96,6% (terendah), 27,6% dari semua NG lini.</p></div>
+<div class="card"><span class="q">Temuan 3 · Pengiriman</span><h3>On-time 95,8% bila data ada</h3><p>Ujung ke ujung 93,2%, karena 2 hari data tiba siang dan 3 run gagal (simulasi).</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Aturan R1 dan R2 tanpa alarm palsu; ambang tetap dan persentase membanjiri</h3><div class="row"><span class="n" style="width:150px">R1 yield lini (−2σ)</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0</span></div><div class="row"><span class="n" style="width:150px">R2 yield stasiun (−3,5σ)</span><span class="t"><span class="b" style="width:0.0%;background:#188038"></span></span><span class="v">0</span></div><div class="row"><span class="n" style="width:150px">R3 lonjakan defect (Poisson)</span><span class="t"><span class="b" style="width:0.8%;background:#E37400"></span></span><span class="v">1</span></div><div class="row"><span class="n" style="width:150px">Ambang tetap yield 86,5%</span><span class="t"><span class="b" style="width:3.8%;background:#D93025"></span></span><span class="v">5</span></div><div class="row"><span class="n" style="width:150px">Defect naik > 50%</span><span class="t"><span class="b" style="width:95.4%;background:#D93025"></span></span><span class="v">124</span></div><p class="foot">Jumlah alert palsu pada replay data simulasi (in-sample).</p></div>
+<div class="card fig"><h3>Yield lini harian sering melewati ambang tetap 86,5% di hari yang bukan kejadian</h3><svg viewBox="0 0 640 300" role="img" aria-label="Yield lini harian (%)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="545" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">83%</text><line x1="48" x2="545" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">85%</text><line x1="48" x2="545" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">87%</text><line x1="48" x2="545" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">89%</text><line x1="48" x2="545" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">91%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">02/03</text><text x="116.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">16/03</text><text x="184.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">30/03</text><text x="252.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">13/04</text><text x="320.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">28/04</text><text x="388.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">12/05</text><text x="456.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">26/05</text><text x="524.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">09/06</text><line x1="48" x2="545" y1="155.8" y2="155.8" stroke="#D93025" stroke-dasharray="6 4" stroke-width="1.5"/><text x="551" y="159.8" font-size="12" fill="#D93025" font-weight="700">ambang 86,5%</text><polyline points="48.0,116.1 54.8,108.9 61.6,124.5 68.4,112.3 75.2,134.0 82.0,107.5 88.8,116.7 95.7,82.8 102.5,70.6 109.3,132.9 116.1,87.6 122.9,81.3 129.7,89.1 136.5,67.5 143.3,78.7 150.1,171.7 156.9,135.6 163.7,121.1 170.5,161.0 177.4,106.6 184.2,167.9 191.0,171.2 197.8,109.5 204.6,115.0 211.4,111.2 218.2,103.6 225.0,117.2 231.8,151.7 238.6,122.0 245.4,84.7 252.2,151.3 259.1,88.2 265.9,124.5 272.7,102.3 279.5,170.6 286.3,116.1 293.1,63.0 299.9,101.9 306.7,95.3 313.5,84.0 320.3,167.2 327.1,110.1 333.9,89.9 340.8,156.9 347.6,246.9 354.4,97.0 361.2,120.2 368.0,109.3 374.8,183.2 381.6,114.3 388.4,103.7 395.2,67.0 402.0,70.9 408.8,118.2 415.6,62.7 422.5,57.3 429.3,113.8 436.1,116.2 442.9,95.8 449.7,88.3 456.5,77.2 463.3,135.3 470.1,147.3 476.9,117.4 483.7,142.6 490.5,195.7 497.3,179.8 504.2,144.4 511.0,90.6 517.8,99.7 524.6,160.8 531.4,136.7 538.2,91.0 545.0,132.0" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="116.1" r="2.8" fill="#1A73E8"/><circle cx="54.8" cy="108.9" r="2.8" fill="#1A73E8"/><circle cx="61.6" cy="124.5" r="2.8" fill="#1A73E8"/><circle cx="68.4" cy="112.3" r="2.8" fill="#1A73E8"/><circle cx="75.2" cy="134.0" r="2.8" fill="#1A73E8"/><circle cx="82.0" cy="107.5" r="2.8" fill="#1A73E8"/><circle cx="88.8" cy="116.7" r="2.8" fill="#1A73E8"/><circle cx="95.7" cy="82.8" r="2.8" fill="#1A73E8"/><circle cx="102.5" cy="70.6" r="2.8" fill="#1A73E8"/><circle cx="109.3" cy="132.9" r="2.8" fill="#1A73E8"/><circle cx="116.1" cy="87.6" r="2.8" fill="#1A73E8"/><circle cx="122.9" cy="81.3" r="2.8" fill="#1A73E8"/><circle cx="129.7" cy="89.1" r="2.8" fill="#1A73E8"/><circle cx="136.5" cy="67.5" r="2.8" fill="#1A73E8"/><circle cx="143.3" cy="78.7" r="2.8" fill="#1A73E8"/><circle cx="150.1" cy="171.7" r="2.8" fill="#1A73E8"/><circle cx="156.9" cy="135.6" r="2.8" fill="#1A73E8"/><circle cx="163.7" cy="121.1" r="2.8" fill="#1A73E8"/><circle cx="170.5" cy="161.0" r="2.8" fill="#1A73E8"/><circle cx="177.4" cy="106.6" r="2.8" fill="#1A73E8"/><circle cx="184.2" cy="167.9" r="2.8" fill="#1A73E8"/><circle cx="191.0" cy="171.2" r="2.8" fill="#1A73E8"/><circle cx="197.8" cy="109.5" r="2.8" fill="#1A73E8"/><circle cx="204.6" cy="115.0" r="2.8" fill="#1A73E8"/><circle cx="211.4" cy="111.2" r="2.8" fill="#1A73E8"/><circle cx="218.2" cy="103.6" r="2.8" fill="#1A73E8"/><circle cx="225.0" cy="117.2" r="2.8" fill="#1A73E8"/><circle cx="231.8" cy="151.7" r="2.8" fill="#1A73E8"/><circle cx="238.6" cy="122.0" r="2.8" fill="#1A73E8"/><circle cx="245.4" cy="84.7" r="2.8" fill="#1A73E8"/><circle cx="252.2" cy="151.3" r="2.8" fill="#1A73E8"/><circle cx="259.1" cy="88.2" r="2.8" fill="#1A73E8"/><circle cx="265.9" cy="124.5" r="2.8" fill="#1A73E8"/><circle cx="272.7" cy="102.3" r="2.8" fill="#1A73E8"/><circle cx="279.5" cy="170.6" r="2.8" fill="#1A73E8"/><circle cx="286.3" cy="116.1" r="2.8" fill="#1A73E8"/><circle cx="293.1" cy="63.0" r="2.8" fill="#1A73E8"/><circle cx="299.9" cy="101.9" r="2.8" fill="#1A73E8"/><circle cx="306.7" cy="95.3" r="2.8" fill="#1A73E8"/><circle cx="313.5" cy="84.0" r="2.8" fill="#1A73E8"/><circle cx="320.3" cy="167.2" r="2.8" fill="#1A73E8"/><circle cx="327.1" cy="110.1" r="2.8" fill="#1A73E8"/><circle cx="333.9" cy="89.9" r="2.8" fill="#1A73E8"/><circle cx="340.8" cy="156.9" r="2.8" fill="#1A73E8"/><circle cx="347.6" cy="246.9" r="2.8" fill="#1A73E8"/><circle cx="354.4" cy="97.0" r="2.8" fill="#1A73E8"/><circle cx="361.2" cy="120.2" r="2.8" fill="#1A73E8"/><circle cx="368.0" cy="109.3" r="2.8" fill="#1A73E8"/><circle cx="374.8" cy="183.2" r="2.8" fill="#1A73E8"/><circle cx="381.6" cy="114.3" r="2.8" fill="#1A73E8"/><circle cx="388.4" cy="103.7" r="2.8" fill="#1A73E8"/><circle cx="395.2" cy="67.0" r="2.8" fill="#1A73E8"/><circle cx="402.0" cy="70.9" r="2.8" fill="#1A73E8"/><circle cx="408.8" cy="118.2" r="2.8" fill="#1A73E8"/><circle cx="415.6" cy="62.7" r="2.8" fill="#1A73E8"/><circle cx="422.5" cy="57.3" r="2.8" fill="#1A73E8"/><circle cx="429.3" cy="113.8" r="2.8" fill="#1A73E8"/><circle cx="436.1" cy="116.2" r="2.8" fill="#1A73E8"/><circle cx="442.9" cy="95.8" r="2.8" fill="#1A73E8"/><circle cx="449.7" cy="88.3" r="2.8" fill="#1A73E8"/><circle cx="456.5" cy="77.2" r="2.8" fill="#1A73E8"/><circle cx="463.3" cy="135.3" r="2.8" fill="#1A73E8"/><circle cx="470.1" cy="147.3" r="2.8" fill="#1A73E8"/><circle cx="476.9" cy="117.4" r="2.8" fill="#1A73E8"/><circle cx="483.7" cy="142.6" r="2.8" fill="#1A73E8"/><circle cx="490.5" cy="195.7" r="2.8" fill="#1A73E8"/><circle cx="497.3" cy="179.8" r="2.8" fill="#1A73E8"/><circle cx="504.2" cy="144.4" r="2.8" fill="#1A73E8"/><circle cx="511.0" cy="90.6" r="2.8" fill="#1A73E8"/><circle cx="517.8" cy="99.7" r="2.8" fill="#1A73E8"/><circle cx="524.6" cy="160.8" r="2.8" fill="#1A73E8"/><circle cx="531.4" cy="136.7" r="2.8" fill="#1A73E8"/><circle cx="538.2" cy="91.0" r="2.8" fill="#1A73E8"/><circle cx="545.0" cy="132.0" r="2.8" fill="#1A73E8"/><text x="553.0" y="136.0" font-size="13" font-weight="700" fill="#1A73E8">Yield lini harian</text></svg><p class="foot">Yield lini harian (%), Maret–Juni 2026 (simulasi). Penurunan terdalam 4 Mei.</p></div>
+<div class="card fig"><h3>Frame Painting menyumbang seperempat lebih dari semua NG</h3><div class="row"><span class="n" style="width:150px">Frame Painting</span><span class="t"><span class="b" style="width:78.9%;background:#E37400"></span></span><span class="v">27,6%</span></div><div class="row"><span class="n" style="width:150px">Electrical Test</span><span class="t"><span class="b" style="width:31.5%;background:#1A73E8"></span></span><span class="v">11,0%</span></div><div class="row"><span class="n" style="width:150px">Performance Test (Dyno)</span><span class="t"><span class="b" style="width:30.5%;background:#1A73E8"></span></span><span class="v">10,7%</span></div><div class="row"><span class="n" style="width:150px">Frame Welding</span><span class="t"><span class="b" style="width:27.7%;background:#1A73E8"></span></span><span class="v">9,7%</span></div><div class="row"><span class="n" style="width:150px">Body Panel Assembly</span><span class="t"><span class="b" style="width:27.1%;background:#1A73E8"></span></span><span class="v">9,5%</span></div><div class="row"><span class="n" style="width:150px">Engine Assembly</span><span class="t"><span class="b" style="width:26.0%;background:#1A73E8"></span></span><span class="v">9,1%</span></div><div class="row"><span class="n" style="width:150px">Wheel & Suspension</span><span class="t"><span class="b" style="width:21.2%;background:#1A73E8"></span></span><span class="v">7,4%</span></div><div class="row"><span class="n" style="width:150px">Wiring Harness Install</span><span class="t"><span class="b" style="width:19.6%;background:#1A73E8"></span></span><span class="v">6,9%</span></div><div class="row"><span class="n" style="width:150px">Final Inspection</span><span class="t"><span class="b" style="width:17.3%;background:#1A73E8"></span></span><span class="v">6,1%</span></div><div class="row"><span class="n" style="width:150px">Packing</span><span class="t"><span class="b" style="width:5.8%;background:#1A73E8"></span></span><span class="v">2,0%</span></div><p class="foot">Porsi tiap stasiun dari total NG lini, seluruh periode.</p></div>
+<div class="card fig"><h3>Laporan hampir selalu tepat waktu; sisanya karena data terlambat atau hilang</h3><div class="row"><span class="n" style="width:150px">Data sudah ada saat run 07:00</span><span class="t"><span class="b" style="width:95.8%;background:#188038"></span></span><span class="v">95,8%</span></div><div class="row"><span class="n" style="width:150px">Ujung ke ujung (hari dengan data tiba)</span><span class="t"><span class="b" style="width:93.2%;background:#1A73E8"></span></span><span class="v">93,2%</span></div><div class="row"><span class="n" style="width:150px">Semua hari kerja (termasuk data hilang)</span><span class="t"><span class="b" style="width:92.0%;background:#E37400"></span></span><span class="v">92,0%</span></div><p class="foot">Tingkat laporan terkirim paling lambat 07:15; sebagian gagal dan jeda adalah simulasi.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Pakai R1 dan R2</b> sebagai alert utama, R3 sebagai informasi tambahan; hindari ambang tetap atau aturan persentase.</li>
+<li><b>Kirim pesan no_data</b> saat data belum masuk dan cek ulang tiap jam sampai 14:00.</li>
+<li><b>Sebelum dipakai nyata:</b> uji kirim ke grup Telegram sungguhan dan jalankan workflow di GitHub Actions.</li></ul></div>
+<div class="scroll"><table><tr><th>Waktu manual per laporan (asumsi)</th><th>Hemat per tahun</th></tr>
+<tr><td>15 menit</td><td>53,1 jam <span class="est">perkiraan</span></td></tr><tr><td>20 menit</td><td>73,5 jam <span class="est">perkiraan</span></td></tr><tr class=sel><td>30 menit (dasar)</td><td>114,3 jam <span class="est">perkiraan</span></td></tr><tr><td>40 menit</td><td>155,2 jam <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: 245 hari kerja per tahun; waktu manual 30 menit per laporan tidak diukur; baca pesan bot 2 menit; waktu otomatis 0,29 detik (diukur). Belum dalam rupiah.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang pesan bot vs SQL vs Excel (LibreOffice): 12 dari 12 tanggal sampel lulus.</li>
+<li>Skenario bot 8 dari 8 lulus; uji perintah 9 dari 9 lulus; pytest 22 dari 22 lulus.</li>
+<li>Pemindaian rahasia: 0 berkas dan 0 riwayat git memuat token; workflow memakai secrets.</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li><b>Data simulasi</b>; hasil membuktikan metode, bukan kondisi pabrik. Evaluasi alert in-sample pada 3 kejadian.</li>
+<li><b>Bot belum mengirim ke Telegram sungguhan</b>; <code>TelegramSender</code> diuji dengan transport palsu. Workflow GitHub Actions belum dijalankan; dashboard belum di-deploy.</li>
+<li>Alert dicek sekali sehari, bukan real-time; alert menunjukkan kapan yield turun, bukan penyebabnya.</li>
+<li>Waktu manual per laporan adalah estimasi; Excel dihitung ulang LibreOffice, bukan Microsoft Excel.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Sidik jari data simulasi (DataCenter): <a href="https://github.com/bagusbernadi/DataCenter/tree/main/simulasi" target="_blank" rel="noopener">simulasi</a></li>
+<li>Repository (bot, SQL, aturan alert): <a href="https://github.com/bagusbernadi/Project-23-Telegram-KPI-Reporting-Bot" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-23-One-Pager.pdf">Project-23-One-Pager.pdf</a></li></ul>
+<p class="foot">Tidak ada dataset eksternal: data dibangkitkan oleh skrip di repository.</p></div>
+
+</main></body></html>

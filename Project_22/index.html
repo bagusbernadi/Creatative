@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project 22: Cohort Retention & RFM Segmentation</title><meta name="description" content="Retensi kohort dan segmentasi RFM pelanggan Online Retail II (UCI). SQL, Python, Streamlit.">
+<meta property="og:type" content="article"><meta property="og:title" content="Project 22: Cohort Retention & RFM Segmentation"><meta property="og:description" content="Seperempat pelanggan (Champions) menyumbang 69% revenue, sementara retensi bulan 1 hanya 23%.">
+<meta name="theme-color" content="#1A73E8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+--bg:#F8F9FA;--card:#FFFFFF;--sub:#F1F3F4;--line:#DADCE0;
+--ink:#202124;--head:#174EA6;--mut:#5F6368;
+--navy:#1A73E8;--teal:#188038;--amber:#FBBC04;--amber-ink:#3C2A00;--soft:#E8F0FE;--rose:#D93025;
+--f:"Source Sans 3",Calibri,"Segoe UI",Arial,sans-serif}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 var(--f)}
+main{max-width:960px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 56px max(16px,env(safe-area-inset-left))}
+a{color:var(--navy);font-weight:600}
+.back{display:inline-block;margin:12px 0;font-size:14px;text-decoration:none}
+.banner{background:linear-gradient(120deg,#1A73E8,#4285F4);color:#fff;border-radius:18px;padding:22px 26px}
+.banner h1{margin:0 0 8px;font-size:clamp(26px,3vw,32px);font-weight:800;line-height:1.2;text-wrap:balance}
+.banner p{margin:0;font-size:17.5px;line-height:1.55}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.2)}
+.tag.a{background:var(--amber);color:var(--amber-ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px}
+.tab{font:700 15px var(--f);cursor:pointer;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 18px}
+.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0}
+.jump a{font-size:13.5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;text-decoration:none;color:var(--ink)}
+.jump a:hover{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+h2{font-size:clamp(21px,2.2vw,25px);font-weight:800;color:var(--head);margin:36px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--line);line-height:1.25}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:4px}
+h3{font-size:18px;font-weight:700;color:var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:12px 0}
+.card p{margin:8px 0}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:900px){.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3 .card{margin:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid2 img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+dl.sum{margin:0;display:grid;grid-template-columns:1fr;gap:2px 16px}
+dl.sum dt{font-weight:800;color:var(--head);margin-top:10px}
+dl.sum dd{margin:0}
+@media(min-width:700px){dl.sum{grid-template-columns:170px 1fr}dl.sum dt{margin-top:0;padding:8px 0;border-top:1px solid var(--line)}dl.sum dd{padding:8px 0;border-top:1px solid var(--line)}dl.sum dt:first-of-type,dl.sum dd:first-of-type{border-top:0}}
+.q{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+.row .n{width:122px;flex:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{flex:1;background:var(--sub);border-radius:7px;height:18px;position:relative;overflow:hidden}
+.row .b{position:absolute;inset:0 auto 0 0;background:var(--navy);border-radius:7px}
+.row .b.y{background:var(--amber)}
+.row .v{width:70px;text-align:right;flex:none;font-variant-numeric:tabular-nums;font-weight:600}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;vertical-align:top}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:nth-child(odd) td{background:var(--sub)}
+tr.sel td{background:#FEF7E0;font-weight:700}
+td.nw{white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;background:var(--teal);color:#fff;white-space:nowrap}
+.pill.p{background:var(--amber);color:var(--amber-ink)}.pill.d{background:var(--sub);border:1px solid var(--line);color:var(--mut)}
+.est{display:inline-block;background:var(--amber);color:var(--amber-ink);font-size:11.5px;font-weight:800;border-radius:999px;padding:0 8px;vertical-align:middle}
+.note{background:#FEF7E0;border:1px solid #FDD663;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15.5px;color:var(--amber-ink)}
+.how{background:var(--soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 20px;font-weight:700}
+ul.t{margin:6px 0;padding-left:20px}ul.t li{margin:5px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:700;font-size:16.5px;color:var(--head)}
+.ph4{display:grid;gap:12px;margin:12px 0}
+@media(min-width:800px){.ph4{grid-template-columns:repeat(4,1fr)}}
+.ph4>div{border-radius:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--c) 35%,#fff);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.ph4 h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--c)}
+.ph4 ol{margin:0;padding-left:20px;font-size:15px}.ph4 li{margin:4px 0}
+.ph4 li.L::after{content:" ★";color:#B06000}
+.foot{font-size:14px;color:var(--mut);margin-top:6px}
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}
+
+.fig h3{margin:0 0 8px;font-size:19px}.fig svg{max-width:680px}</style></head>
+<body><main>
+<a class="back" href="https://bagusbernadi.github.io/">← All projects / Semua project</a>
+<header class="banner"><h1>Project 22: segmen pelanggan mana yang paling bernilai dan berisiko?</h1><p><b>Tujuan project:</b> mengukur retensi kohort dan segmen RFM pelanggan ritel online, lalu menyusun strategi per segmen. <b>Data publik Online Retail II (UCI).</b></p><div class="tags"><span class="tag a">Status: selesai (dashboard belum di-deploy)</span><span class="tag">Ritel · pelanggan</span><span class="tag">DATA PUBLIK UCI</span><span class="tag">SQL · Python · Streamlit</span></div></header>
+<div class="jump"><a href="#r-ringkasan">Ringkasan</a><a href="#r-temuan">Temuan</a><a href="#r-grafik">Grafik</a><a href="#r-rek">Rekomendasi</a><a href="#r-verif">Verifikasi</a><a href="#r-batas">Batasan</a><a href="#r-link">Tautan</a></div>
+<h2 id="r-ringkasan">Ringkasan<small>Dibaca 1 menit</small></h2>
+<div class="card"><dl class="sum">
+<dt>Pertanyaan</dt><dd>Bagaimana pola retensi pelanggan per kohort, segmen RFM mana yang paling bernilai atau berisiko berhenti belanja, dan strategi apa yang layak untuk tiap segmen?</dd>
+<dt>Data</dt><dd>Online Retail II (UCI, CC BY 4.0): 1.067.371 baris mentah, 776.583 baris dipakai dari 5.852 pelanggan setelah dedup dan cleaning; Desember 2009–Desember 2011.</dd>
+<dt>Temuan utama</dt><dd><b>Champions (25% pelanggan) menyumbang 68,9% revenue.</b> Retensi bulan 1 hanya 23,3%, dan naik dari 16,4% ke 30,1% menurut nilai pembelian pertama.</dd>
+<dt>Keputusan yang didukung</dt><dd>Pertahankan Champions, aktifkan kembali At Risk dan Need Attention, dorong pembelian kedua pada pelanggan baru. Tiap kenaikan 2 poin retensi bulan 1 bernilai sekitar £536 ribu per tahun <span class="est">perkiraan</span>.</dd>
+<dt>Metode</dt><dd>DuckDB + SQL (kohort, RFM kuintil, 8 segmen), pandas crosscheck, CI Wilson, chi-kuadrat dan Mann-Whitney, uji sensitivitas, dashboard Streamlit.</dd>
+<dt>Catatan jujur</dt><dd>Segmen tidak stabil: hanya 41,3% pelanggan yang sama segmennya antara snapshot 2010 dan 2011. Segmen menunjukkan perilaku, bukan penyebab berhenti belanja. Dampak adalah estimasi dari asumsi.</dd>
+</dl></div>
+<h2 id="r-temuan">Tiga temuan<small>Pada data publik Online Retail II</small></h2>
+<div class="grid3">
+<div class="card"><span class="q">Temuan 1 · Nilai</span><h3>Pendapatan sangat terkonsentrasi</h3><p>Champions 68,9% revenue; 20% pelanggan teratas 77,2%. Hibernating dan Lost kurang dari 4% revenue.</p></div>
+<div class="card"><span class="q">Temuan 2 · Retensi</span><h3>Bulan pertama paling rawan</h3><p>Retensi bulan 1 23,3%; 72,4% pelanggan punya ≥ 2 invoice. Pembelian pertama bernilai tinggi lebih sering kembali.</p></div>
+<div class="card"><span class="q">Temuan 3 · Risiko</span><h3>At Risk masih bernilai</h3><p>14,2% pelanggan dan 9,3% revenue; median recency 374 hari.</p></div>
+</div>
+<h2 id="r-grafik">Grafik utama<small>Tiap judul adalah kesimpulannya</small></h2>
+<div class="card fig"><h3>Champions menyumbang 69% revenue dari seperempat pelanggan</h3><div class="row"><span class="n" style="width:150px">Champions</span><span class="t"><span class="b" style="width:86.2%;background:#E37400"></span></span><span class="v">68,9%</span></div><div class="row"><span class="n" style="width:150px">Loyal</span><span class="t"><span class="b" style="width:18.1%;background:#1A73E8"></span></span><span class="v">14,5%</span></div><div class="row"><span class="n" style="width:150px">At Risk</span><span class="t"><span class="b" style="width:11.7%;background:#1A73E8"></span></span><span class="v">9,3%</span></div><div class="row"><span class="n" style="width:150px">Hibernating</span><span class="t"><span class="b" style="width:3.3%;background:#1A73E8"></span></span><span class="v">2,7%</span></div><div class="row"><span class="n" style="width:150px">Potential Loyalist</span><span class="t"><span class="b" style="width:2.9%;background:#1A73E8"></span></span><span class="v">2,3%</span></div><div class="row"><span class="n" style="width:150px">Need Attention</span><span class="t"><span class="b" style="width:1.5%;background:#1A73E8"></span></span><span class="v">1,2%</span></div><div class="row"><span class="n" style="width:150px">Lost</span><span class="t"><span class="b" style="width:1.2%;background:#1A73E8"></span></span><span class="v">1,0%</span></div><div class="row"><span class="n" style="width:150px">New</span><span class="t"><span class="b" style="width:0.1%;background:#1A73E8"></span></span><span class="v">0,1%</span></div><p class="foot">Porsi revenue per segmen RFM (%).</p></div>
+<div class="card fig"><h3>Retensi bulanan bertahan sekitar 19–25%, tidak membaik seiring waktu</h3><svg viewBox="0 0 640 300" role="img" aria-label="Retensi tertimbang bulan 1–12 (%)" style="width:100%;height:auto;display:block" font-family="Source Sans 3,Segoe UI,Arial,sans-serif"><line x1="48" x2="580" y1="266.0" y2="266.0" stroke="#DADCE0"/><text x="42" y="270.0" text-anchor="end" font-size="12" fill="#5F6368">0%</text><line x1="48" x2="580" y1="203.0" y2="203.0" stroke="#DADCE0"/><text x="42" y="207.0" text-anchor="end" font-size="12" fill="#5F6368">10%</text><line x1="48" x2="580" y1="140.0" y2="140.0" stroke="#DADCE0"/><text x="42" y="144.0" text-anchor="end" font-size="12" fill="#5F6368">20%</text><line x1="48" x2="580" y1="77.0" y2="77.0" stroke="#DADCE0"/><text x="42" y="81.0" text-anchor="end" font-size="12" fill="#5F6368">30%</text><line x1="48" x2="580" y1="14.0" y2="14.0" stroke="#DADCE0"/><text x="42" y="18.0" text-anchor="end" font-size="12" fill="#5F6368">40%</text><text x="48.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">1</text><text x="96.4" y="288" text-anchor="middle" font-size="12" fill="#5F6368">2</text><text x="144.7" y="288" text-anchor="middle" font-size="12" fill="#5F6368">3</text><text x="193.1" y="288" text-anchor="middle" font-size="12" fill="#5F6368">4</text><text x="241.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">5</text><text x="289.8" y="288" text-anchor="middle" font-size="12" fill="#5F6368">6</text><text x="338.2" y="288" text-anchor="middle" font-size="12" fill="#5F6368">7</text><text x="386.5" y="288" text-anchor="middle" font-size="12" fill="#5F6368">8</text><text x="434.9" y="288" text-anchor="middle" font-size="12" fill="#5F6368">9</text><text x="483.3" y="288" text-anchor="middle" font-size="12" fill="#5F6368">10</text><text x="531.6" y="288" text-anchor="middle" font-size="12" fill="#5F6368">11</text><text x="580.0" y="288" text-anchor="middle" font-size="12" fill="#5F6368">12</text><polyline points="48.0,118.9 96.4,117.3 144.7,108.6 193.1,122.3 241.5,128.1 289.8,126.2 338.2,128.9 386.5,140.6 434.9,143.5 483.3,142.1 531.6,128.5 580.0,122.7" fill="none" stroke="#1A73E8" stroke-width="2.4"/><circle cx="48.0" cy="118.9" r="2.8" fill="#1A73E8"/><circle cx="96.4" cy="117.3" r="2.8" fill="#1A73E8"/><circle cx="144.7" cy="108.6" r="2.8" fill="#1A73E8"/><circle cx="193.1" cy="122.3" r="2.8" fill="#1A73E8"/><circle cx="241.5" cy="128.1" r="2.8" fill="#1A73E8"/><circle cx="289.8" cy="126.2" r="2.8" fill="#1A73E8"/><circle cx="338.2" cy="128.9" r="2.8" fill="#1A73E8"/><circle cx="386.5" cy="140.6" r="2.8" fill="#1A73E8"/><circle cx="434.9" cy="143.5" r="2.8" fill="#1A73E8"/><circle cx="483.3" cy="142.1" r="2.8" fill="#1A73E8"/><circle cx="531.6" cy="128.5" r="2.8" fill="#1A73E8"/><circle cx="580.0" cy="122.7" r="2.8" fill="#1A73E8"/><text x="588.0" y="126.7" font-size="13" font-weight="700" fill="#1A73E8">Retensi</text></svg><p class="foot">Retensi tertimbang per bulan sejak bulan pembelian pertama (bulan 1–12; bulan lebih jauh hanya diwakili sedikit kohort). Kohort Desember 2009 lebih tinggi karena memuat pelanggan lama.</p></div>
+<div class="card fig"><h3>Pembelian pertama bernilai besar hampir dua kali lebih sering kembali</h3><div class="row"><span class="n" style="width:150px">Q1 terendah</span><span class="t"><span class="b" style="width:40.9%;background:#E37400"></span></span><span class="v">16,4%</span></div><div class="row"><span class="n" style="width:150px">Q2</span><span class="t"><span class="b" style="width:53.8%;background:#188038"></span></span><span class="v">21,5%</span></div><div class="row"><span class="n" style="width:150px">Q3</span><span class="t"><span class="b" style="width:63.3%;background:#188038"></span></span><span class="v">25,3%</span></div><div class="row"><span class="n" style="width:150px">Q4 tertinggi</span><span class="t"><span class="b" style="width:75.1%;background:#188038"></span></span><span class="v">30,0%</span></div><p class="foot">Retensi bulan 1 menurut kuartil nilai invoice pertama. Pola, bukan sebab.</p></div>
+<div class="card fig"><h3>Segmen tidak stabil: banyak pelanggan berpindah segmen tahun berikutnya</h3><div class="row"><span class="n" style="width:150px">Champions</span><span class="t"><span class="b" style="width:66.8%;background:#188038"></span></span><span class="v">67%</span></div><div class="row"><span class="n" style="width:150px">Loyal</span><span class="t"><span class="b" style="width:28.9%;background:#E37400"></span></span><span class="v">29%</span></div><div class="row"><span class="n" style="width:150px">Potential Loyalist</span><span class="t"><span class="b" style="width:4.6%;background:#E37400"></span></span><span class="v">5%</span></div><div class="row"><span class="n" style="width:150px">New</span><span class="t"><span class="b" style="width:0.0%;background:#E37400"></span></span><span class="v">0%</span></div><div class="row"><span class="n" style="width:150px">Need Attention</span><span class="t"><span class="b" style="width:3.5%;background:#E37400"></span></span><span class="v">3%</span></div><div class="row"><span class="n" style="width:150px">At Risk</span><span class="t"><span class="b" style="width:41.1%;background:#E37400"></span></span><span class="v">41%</span></div><div class="row"><span class="n" style="width:150px">Lost</span><span class="t"><span class="b" style="width:69.3%;background:#188038"></span></span><span class="v">69%</span></div><div class="row"><span class="n" style="width:150px">Hibernating</span><span class="t"><span class="b" style="width:40.0%;background:#E37400"></span></span><span class="v">40%</span></div><p class="foot">Persentase pelanggan yang tetap di segmen sama antara snapshot 2010 dan 2011.</p></div>
+<h2 id="r-rek">Rekomendasi dan dampak<small>Perkiraan; asumsi dijelaskan di bawah</small></h2>
+<div class="card"><ul class="t">
+<li><b>Champions:</b> pertahankan dengan layanan dan penawaran prioritas.</li>
+<li><b>At Risk dan Need Attention:</b> aktifkan kembali.</li>
+<li><b>Potential Loyalist dan New:</b> dorong pembelian kedua.</li>
+<li><b>Hibernating dan Lost:</b> biarkan kecuali ada kampanye biaya rendah.</li></ul></div>
+<div class="scroll"><table><tr><th>Kenaikan retensi bulan 1</th><th>Tambahan revenue per tahun</th></tr>
+<tr class="sel"><td>2 poin</td><td>sekitar £535.770 <span class="est">perkiraan</span></td></tr>
+<tr><td>5 poin</td><td>sekitar £1.339.425 <span class="est">perkiraan</span></td></tr>
+<tr><td>10 poin</td><td>sekitar £2.678.851 <span class="est">perkiraan</span></td></tr></table></div>
+<div class="note">Asumsi: revenue per pelanggan aktif per bulan £669 (dari data); kenaikan retensi dianggap bertahan. Bukan hasil eksperimen.</div>
+<h2 id="r-verif">Verifikasi<small>Pipeline dijalankan ulang dari nol; hasil sama dengan yang tersimpan</small></h2>
+<div class="card"><ul class="t">
+<li>Cek silang SQL vs pandas: 13 dari 13 cek lulus (53.868 nilai cocok).</li>
+<li>Hipotesis H1–H5 terbukti menurut ambang project; H4 terbukti menurut aturan, tetapi selisih frekuensi sangat kecil (6,24 vs 6,26 invoice per pelanggan).</li>
+<li>Dashboard Streamlit lolos AppTest (semua halaman dan filter).</li></ul></div>
+<h2 id="r-batas">Batasan</h2>
+<div class="card"><ul class="t">
+<li>Dampak adalah estimasi dari asumsi, belum diuji di lapangan.</li>
+<li>Sekitar 22% baris tanpa Customer ID tidak masuk analisis pelanggan. Desember 2009 bisa memuat pelanggan lama; Desember 2011 tidak lengkap.</li>
+<li>Aturan segmen dan ambang hipotesis adalah asumsi project; skor F banyak bernilai sama sehingga batas kuintil bergantung pada tie-breaker.</li>
+<li>Dashboard belum diuji pembaca awam dan belum di-deploy.</li></ul></div>
+<h2 id="r-link">Tautan</h2>
+<div class="card"><ul class="t">
+<li>Dataset resmi (UCI): <a href="https://archive.ics.uci.edu/dataset/502/online+retail+ii" target="_blank" rel="noopener">Online Retail II</a> (DOI 10.24432/C5CG6D, CC BY 4.0, diakses 24 Oktober 2026)</li>
+<li>Salinan di DataCenter: <a href="https://github.com/bagusbernadi/DataCenter/tree/main/online-retail-ii" target="_blank" rel="noopener">online-retail-ii</a></li>
+<li>Repository (SQL, dashboard): <a href="https://github.com/bagusbernadi/Project-22-Cohort-RFM-Segmentation" target="_blank" rel="noopener">GitHub</a></li>
+<li>Ringkasan 1 halaman: <a href="Project-22-One-Pager.pdf">Project-22-One-Pager.pdf</a></li></ul>
+<p class="foot">Sitasi: Chen, D. (2012). Online Retail II [Dataset]. UCI Machine Learning Repository.</p></div>
+
+</main></body></html>
